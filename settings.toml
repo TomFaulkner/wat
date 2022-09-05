@@ -1,0 +1,16 @@
+site_hostname = "http://localhost:8001"
+
+db_user = "user"
+db_password = "password"
+db_host = "localhost"
+db_database = "default"
+
+log_level = 'DEBUG'
+
+jwt_expiration_time = 60
+jwt_refresh_expiration_time = 720
+
+secret_jwt = "SECRET"
+secret_cookie = "SECRET"
+secret_password_reset = "SECRET"
+secret_password_email_verification = "SECRET"

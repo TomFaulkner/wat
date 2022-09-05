@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "wat"
+version = "0.1.0"
+description = ""
+authors = ["Tom Faulkner <tomfaulkner@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.79.0"
+dynaconf = "^3.1.9"
+uvicorn = "^0.18.3"
+edgedb = "^0.24.0"
+
+[tool.poetry.dev-dependencies]
+pytest = ">=7"
+black = "^22.6.0"
+isort = "^5.10.1"
+pre-commit = "^2.20.0"
+flake8 = "^5.0.4"
+pytest-asyncio = "^0.19.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."wat.modules"]
+# when making changes to this you must rerun poetry install
+"version" = "wat.views.version"
+"workflows" = "wat.views.workflows"
+"manual_exec" = "wat.views.manual_exec"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
