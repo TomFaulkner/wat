@@ -1,0 +1,35 @@
+* Workflow Automation Tool (WhAT)
+** Workflow Instance Creation
+1. Workflow creation
+   1. workflow copied
+   2. Ids replaced and template bool flipped
+   3. State: started
+   4. Flowstate created
+2. NodeInstances copied (by finding all nodeinstances in the template workflow: workflow.node_instances)
+   1. workflow assignment changed to new workflow
+3. Start on Start node is sent to celery
+** Workflow Processing
+1. Called via celery process
+2. Filter all waiting workflows
+   1. Get all nodeinstances tied to workflow
+   2. ForEach: Filter all waiting nodes
+      1. Check depends/depends_on to determine if node can run
+      2. Run node if appropriate(send node id to celery)
+      3. IF action node send to celery
+      4. IF decision process it
+      5. Continue to next node
+** Ingestion
+- Ingestion Start nodes need an entry in ingestion url table
+  =site/ingest/my-name-friendly-goes-here=
+- If not a start node needs workflow instance as well
+  =site/ingest/some-workflow-uuid4-goes-here=
+  - Maybe this could just be the id of the ingestion node
+  - Might not need /ingest at all, just check all URL variables for uuid or string
+- If next node is a response node process it and respond
+
+** Notes
+- https://testdriven.io/blog/fastapi-and-celery/
+- Does workflow need a metadata to get name/description/version? or include in workflow body
+- workflow: 21d3d9aa-2ba8-11ed-81b0-c3b7eaeab847
+- node: 9a465bea-2bd2-11ed-b25b-ab922a707b03
+- node instance: 1f37564c-2bd3-11ed-9214-97a3e3a9190a
