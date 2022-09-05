@@ -18,6 +18,7 @@ isort = "^5.10.1"
 pre-commit = "^2.20.0"
 flake8 = "^5.0.4"
 pytest-asyncio = "^0.19.0"
+Flake8-pyproject = "^1.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -35,3 +36,6 @@ multi_line_output = 3
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+
+[tool.flake8]
+max-line-length = 88

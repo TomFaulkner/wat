@@ -1,0 +1,60 @@
+from wat.svc import workflow
+
+
+async def create_node_instance(node_instance):
+    return node_instance | {"id": next(uu)}
+
+
+def uuid_generator():
+    yield "1p"
+    yield "2p"
+    yield "3p"
+
+
+uu = uuid_generator()
+
+
+node_instances = [
+    {
+        "id": "1",
+        "decision_options": ["2", "3"],
+        "depends_on": [],
+        "parents": [],
+    },
+    {
+        "id": "2",
+        "decision_options": ["3"],
+        "depends_on": [{"id": "1"}],
+        "parents": [{"id": "1"}],
+    },
+    {
+        "id": "3",
+        "decision_options": [],
+        "depends_on": [{"id": "1"}, {"id": "2"}],
+        "parents": [{"id": "1"}, {"id": "2"}],
+    },
+]
+
+
+async def test_create_instances_replaces_ids():
+    calls = []
+
+    async def update_node_instance_relationships(node_instance):
+        calls.append(node_instance)
+        return True
+
+    await workflow._create_node_instances(
+        node_instances, create_node_instance, update_node_instance_relationships
+    )
+
+    assert calls[0]["id"] == "1p"
+    assert calls[0]["decision_options"] == ["2p", "3p"]
+    assert not calls[0]["depends_on"]
+
+    assert calls[1]["id"] == "2p"
+    assert calls[1]["decision_options"] == ["3p"]
+    assert calls[1]["depends_on"] == [{"id": "1p"}]
+
+    assert calls[2]["id"] == "3p"
+    assert calls[2]["decision_options"] == []
+    assert calls[2]["depends_on"] == [{"id": "1p"}, {"id": "2p"}]
