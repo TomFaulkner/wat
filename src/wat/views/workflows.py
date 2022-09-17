@@ -59,5 +59,21 @@ async def instance(wf_id: UUID, tx=Depends(depends.edge_tx)) -> Workflow:
         return await workflow.create_instance(wf_id, tx)
 
 
+@router.put("/workflows/{wf_id}/flowstate", response_model=FlowState)
+async def replace_flowstate(
+    wf_id: UUID, new_state: dict, tx=Depends(depends.edge_tx)
+) -> FlowState:
+    with context.raise_data_errors():
+        return await workflow.replace_flow_state(wf_id, new_state, tx)
+
+
+@router.patch("/workflows/{wf_id}/flowstate", response_model=FlowState)
+async def update_flowstate(
+    wf_id: UUID, new_state: dict, tx=Depends(depends.edge_tx)
+) -> FlowState:
+    with context.raise_data_errors():
+        return await workflow.update_flow_state(wf_id, new_state, tx)
+
+
 def init_app(app):
     app.include_router(router)

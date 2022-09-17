@@ -15,6 +15,8 @@ _workflow_attributes_query = """
     node_instances :{ state, parents, children, depends, depends_on, decision_options, node :{ name, version, config, base, type } },
 """  # noqa: E501 line too long
 
+_flowstate_attributes_query = "id, state, created, last_updated"
+
 
 @inject_client
 async def add(workflow, client: AsyncIOClient):
@@ -68,3 +70,23 @@ get_template_by_id = partial(get_by_id, template_only=True)
 get_active_template_by_id = partial(
     get_by_id, template_only=True, active_template_only=True
 )
+
+
+async def update_flow_state(fs_id: str, new_state: dict, tx) -> dict:
+    res = await tx.query_required_single(
+        """
+        update FlowState
+            filter .id = <uuid>$fs_id
+            set {
+                last_updated := datetime_current(),
+                state := <json>$new_state
+            };
+        select FlowState {%s} filter .id = <uuid>$fs_id;
+        """
+        % _flowstate_attributes_query,
+        fs_id=fs_id,
+        new_state=json.dumps(new_state),
+    )
+    result = edge.obj_to_dict(res)
+    result["state"] = json.loads(res.state)
+    return result

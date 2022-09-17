@@ -75,11 +75,36 @@ async def get_by_id(wf_id: str) -> dict[str, Any]:
     return await workflows.get_by_id(wf_id)
 
 
-async def execute_workflow(wf_id: str, no_updates=False):
+async def execute_workflow(wf_id: str, suppress_updates=False):
     wf = await workflows.get_by_id(wf_id)
     await process.execute_wf(wf)
-    if not no_updates:
+    if not suppress_updates:
         pass
         # update workflow state and node instances
 
     return True
+
+
+async def replace_flow_state(wf_id: str, new_state: dict, tx) -> dict:
+    wf = await workflows.get_by_id(wf_id)
+    res = await workflows.update_flow_state(wf["flowstate"]["id"], new_state, tx)
+    logger.debug(
+        "WF: %s | Prev State: %s | New State: %s",
+        wf_id,
+        wf["flowstate"]["state"],
+        res["state"],
+    )
+    return res
+
+
+async def update_flow_state(wf_id: str, new_state: dict, tx) -> dict:
+    wf = await workflows.get_by_id(wf_id)
+    state = wf["flowstate"]["state"] | new_state
+    res = await workflows.update_flow_state(wf["flowstate"]["id"], state, tx)
+    logger.debug(
+        "WF: %s | Prev State: %s | New State: %s",
+        wf_id,
+        wf["flowstate"]["state"],
+        res["state"],
+    )
+    return res
