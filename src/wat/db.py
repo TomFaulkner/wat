@@ -54,6 +54,11 @@ def _encode_set(obj):
     return [jsonable_encoder(x) for x in obj]
 
 
+def _encode_array(obj):
+    return [i for i in obj]
+
+
 json.ENCODERS_BY_TYPE[uuid.UUID] = lambda obj: str(obj)
 json.ENCODERS_BY_TYPE[edgedb.Set] = _encode_set
 json.ENCODERS_BY_TYPE[edgedb.Object] = _encode_obj
+json.ENCODERS_BY_TYPE[edgedb.Array] = _encode_array

@@ -12,7 +12,7 @@ _workflow_attributes_query = """
     template_active,
     state,
     flowstate :{ state, created, last_updated },
-    node_instances :{ state, parents, children, depends, depends_on, decision_options, node :{ name, version, config, base, type } },
+    node_instances :{ state, parents, children, depends, depends_on, decision_options, required_state, node :{ name, version, config, base, type } },
 """  # noqa: E501 line too long
 
 _flowstate_attributes_query = "id, state, created, last_updated"
@@ -62,7 +62,7 @@ async def get_by_id(
         wf_id=wf_id,
     )
     result = edge.obj_to_dict(res)
-    result["flowstate"]["state"] = json.loads(result["flowstate"]["state"])
+    result["flowstate"]["state"] = json.loads(result["flowstate"]["state"]) or {}
     return result
 
 

@@ -5,7 +5,9 @@ from edgedb import AsyncIOClient
 from ..db import inject_client
 from ..lib import edge
 
-_node_instance_attributes_query = """node, state, workflow :{ id }, decision_options"""
+_node_instance_attributes_query = (
+    """node, state, workflow :{ id }, decision_options, required_state"""
+)
 _node_attributes_query = """name, version, template, base, type, config"""
 
 
@@ -21,7 +23,8 @@ async def add_instance(
                 node := ( select Node filter .id = <uuid>$node ),
                 state := <str>$state,
                 workflow := ( select Workflow filter .id = <uuid>$workflow ),
-                depends := <int16>$depends
+                depends := <int16>$depends,
+                required_state := <array<str>>$required_state
             }
         )
         select new_instance { %s }
@@ -31,6 +34,7 @@ async def add_instance(
         state=node_instance["state"],
         workflow=workflow,
         depends=node_instance["depends"],
+        required_state=node_instance["required_state"] or [],
     )
     result = edge.obj_to_dict(res[0])
     return result
