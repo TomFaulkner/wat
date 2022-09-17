@@ -1,4 +1,5 @@
 import uuid
+from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Callable, ParamSpec, TypeVar
 
 import edgedb
@@ -20,6 +21,14 @@ async def create_pool() -> None:
 
 async def get_client() -> AsyncGenerator[AsyncIOClient, None]:
     yield client
+
+
+@asynccontextmanager
+async def client_context() -> AsyncGenerator[AsyncIOClient, None]:
+    try:
+        yield client
+    finally:
+        pass
 
 
 _P = ParamSpec("_P")

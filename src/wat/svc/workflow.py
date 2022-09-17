@@ -18,7 +18,15 @@ def _strip_ni(node_instance):
     return n
 
 
-async def _create_node_instances(node_instances, create_node, update_node_children):
+def _strip_wf(wf):
+    wf["template"] = False
+    wf["template_active"] = False
+    del wf["id"]
+    del wf["flowstate"]
+    return wf
+
+
+async def _create_node_instances(node_instances, create_node, update_node_children, tx):
     """Makes a copy of each node instance and replaces id parents and depends_on with
     new ids.
     """
@@ -26,7 +34,7 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
     ids = {}
     for ni in node_instances:
         stripped_ni = _strip_ni(ni)
-        new_node = await create_node(stripped_ni)
+        new_node = await create_node(stripped_ni, tx=tx)
         ids[ni["id"]] = new_node["id"]
 
     for ni in node_instances:
@@ -43,26 +51,23 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
         # this needs to be adapted to data.node.update_node_instance_relationships
         # or changed to conform to it
         # probably best to make an adapter function
-        await update_node_children(ni)
+        await update_node_children(ni, tx)
 
 
-async def _adapter_upd_ni_rels(ni):
+async def _adapter_upd_ni_rels(ni, tx):
     return await node.update_node_instance_relationships(
-        ni["id"], ni["parents"], ni["depends_on"], ni["decision_options"]
+        ni["id"], ni["parents"], ni["depends_on"], ni["decision_options"], tx
     )
 
 
-async def create_instance(wf_id: str) -> dict[str, Any]:
+async def create_instance(wf_id: str, tx) -> dict[str, Any]:
     wf = await workflows.get_active_template_by_id(wf_id)
-    wf["template"] = False
-    wf["template_active"] = False
-    del wf["id"]
-    del wf["flowstate"]
+    wf = _strip_wf(wf.copy())
     node_instances = wf.pop("node_instances")
     new_wf = await create(wf)
 
     add_instance = partial(node.add_instance, workflow=new_wf["id"])
-    await _create_node_instances(node_instances, add_instance, _adapter_upd_ni_rels)
+    await _create_node_instances(node_instances, add_instance, _adapter_upd_ni_rels, tx)
     return await workflows.get_by_id(new_wf["id"])
 
 

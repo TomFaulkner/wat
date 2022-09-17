@@ -9,13 +9,12 @@ _node_instance_attributes_query = """node, state, workflow :{ id }, decision_opt
 _node_attributes_query = """name, version, template, base, type, config"""
 
 
-@inject_client
 async def add_instance(
     node_instance: dict[str, Any],
     workflow: str,
-    client: AsyncIOClient,
+    tx,
 ):
-    res = await client.query(
+    res = await tx.query(
         """
         with new_instance := (
             insert NodeInstance {
@@ -37,55 +36,52 @@ async def add_instance(
     return result
 
 
-@inject_client
 async def update_node_instance_relationships(
     instance_id: str,
     parents: list[str],
     depends_on: list[str],
     decision_options: list[str],
-    client,
+    tx,
 ):
-    async for tx in client.transaction():
-        async with tx:
-            for parent in parents:
-                await client.query(
-                    """
-                    update NodeInstance
-                        filter .id = <uuid>$instance_id
-                        set {
-                            parents += (
-                                select detached NodeInstance filter .id = <uuid>$parent
-                            )
-                        };
-                    """,
-                    instance_id=instance_id,
-                    parent=parent["id"],
-                )
-            for dep in depends_on:
-                await client.query(
-                    """
-                    update NodeInstance
-                        filter .id = <uuid>$instance_id
-                        set {
-                            depends_on += (
-                                select detached NodeInstace filter .id = <uuid>$dep
-                            )
-                    }
-                    """,
-                    instance_id=instance_id,
-                    dep=dep,
-                )
-            await client.query(
-                """
-                    update NodeInstance
-                        filter .id = <uuid>$instance_id
-                        set {
-                            decision_options := <array<uuid>>$decision_options
-                        }
-                """,
-                instance_id=instance_id,
-                decision_options=decision_options,
-            )
+    for parent in parents:
+        await tx.query(
+            """
+            update NodeInstance
+                filter .id = <uuid>$instance_id
+                set {
+                    parents += (
+                        select detached NodeInstance filter .id = <uuid>$parent
+                    )
+                };
+            """,
+            instance_id=instance_id,
+            parent=parent["id"],
+        )
+    for dep in depends_on:
+        await tx.query(
+            """
+            update NodeInstance
+                filter .id = <uuid>$instance_id
+                set {
+                    depends_on += (
+                        select detached NodeInstace filter .id = <uuid>$dep
+                    )
+            }
+            """,
+            instance_id=instance_id,
+            dep=dep,
+        )
+    await tx.query(
+        """
+            update NodeInstance
+                filter .id = <uuid>$instance_id
+                set {
+                    decision_options := <array<uuid>>$decision_options
+                }
+        """,
+        instance_id=instance_id,
+        decision_options=decision_options,
+    )
 
 
 @inject_client

@@ -1,7 +1,7 @@
 from wat.svc import workflow
 
 
-async def create_node_instance(node_instance):
+async def create_node_instance(node_instance, tx):
     return node_instance | {"id": next(uu)}
 
 
@@ -39,12 +39,13 @@ node_instances = [
 async def test_create_instances_replaces_ids():
     calls = []
 
-    async def update_node_instance_relationships(node_instance):
+    async def update_node_instance_relationships(node_instance, tx):
         calls.append(node_instance)
         return True
 
+    tx = None
     await workflow._create_node_instances(
-        node_instances, create_node_instance, update_node_instance_relationships
+        node_instances, create_node_instance, update_node_instance_relationships, tx
     )
 
     assert calls[0]["id"] == "1p"

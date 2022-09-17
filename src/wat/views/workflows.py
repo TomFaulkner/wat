@@ -3,10 +3,10 @@ from enum import Enum
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from ..lib import context
+from ..lib import context, depends
 from ..svc import workflow
 
 router = APIRouter()
@@ -54,9 +54,9 @@ async def get(wf_id: UUID) -> Workflow:
 
 
 @router.post("/workflows/create_instance", response_model=Workflow)
-async def instance(wf_id: UUID) -> Workflow:
+async def instance(wf_id: UUID, tx=Depends(depends.edge_tx)) -> Workflow:
     with context.raise_data_errors():
-        return await workflow.create_instance(wf_id)
+        return await workflow.create_instance(wf_id, tx)
 
 
 def init_app(app):
