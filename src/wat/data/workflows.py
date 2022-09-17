@@ -1,4 +1,5 @@
 import json
+from functools import partial
 
 from edgedb import AsyncIOClient
 
@@ -44,14 +45,26 @@ async def add(workflow, client: AsyncIOClient):
 
 
 @inject_client
-async def get_by_id(wf_id: str, client: AsyncIOClient):
-    res = await client.query(
+async def get_by_id(
+    wf_id: str, client: AsyncIOClient, template_only=False, active_template_only=False
+):
+    template_filter = "and .template = true" if template_only else ""
+    active_template_filter = (
+        "and .template_active = true" if active_template_only else ""
+    )
+    res = await client.query_required_single(
         """
-        select Workflow { %s } filter .id = <uuid>$wf_id;
+        select Workflow { %s } filter .id = <uuid>$wf_id %s %s;
         """
-        % _workflow_attributes_query,
+        % (_workflow_attributes_query, template_filter, active_template_filter),
         wf_id=wf_id,
     )
-    result = edge.obj_to_dict(res[0])
+    result = edge.obj_to_dict(res)
     result["flowstate"]["state"] = json.loads(result["flowstate"]["state"])
     return result
+
+
+get_template_by_id = partial(get_by_id, template_only=True)
+get_active_template_by_id = partial(
+    get_by_id, template_only=True, active_template_only=True
+)

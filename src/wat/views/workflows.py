@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from ..lib import context
 from ..svc import workflow
 
 router = APIRouter()
@@ -47,13 +48,15 @@ async def post(workflow_: WorkflowCreate) -> Workflow:
 
 
 @router.get("/workflows", response_model=Workflow)
-async def get(wf_id: str) -> Workflow:
-    return Workflow(**(await workflow.get_by_id(wf_id)))
+async def get(wf_id: UUID) -> Workflow:
+    with context.raise_data_errors():
+        return Workflow(**(await workflow.get_by_id(wf_id)))
 
 
 @router.post("/workflows/create_instance", response_model=Workflow)
-async def instance(wf_id: str) -> Workflow:
-    return await workflow.create_instance(wf_id)
+async def instance(wf_id: UUID) -> Workflow:
+    with context.raise_data_errors():
+        return await workflow.create_instance(wf_id)
 
 
 def init_app(app):

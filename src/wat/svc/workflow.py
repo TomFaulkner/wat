@@ -53,7 +53,9 @@ async def _adapter_upd_ni_rels(ni):
 
 
 async def create_instance(wf_id: str) -> dict[str, Any]:
-    wf = await workflows.get_by_id(wf_id)
+    wf = await workflows.get_active_template_by_id(wf_id)
+    wf["template"] = False
+    wf["template_active"] = False
     del wf["id"]
     del wf["flowstate"]
     node_instances = wf.pop("node_instances")
