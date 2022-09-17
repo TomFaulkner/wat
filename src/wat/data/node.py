@@ -5,14 +5,13 @@ from edgedb import AsyncIOClient
 from ..db import inject_client
 from ..lib import edge
 
-_node_instance_attributes_query = """node, state, workflow :{ id }"""
+_node_instance_attributes_query = """node, state, workflow :{ id }, decision_options"""
 _node_attributes_query = """name, version, template, base, type, config"""
 
 
 @inject_client
 async def add_instance(
     node_instance: dict[str, Any],
-    node: str,
     workflow: str,
     client: AsyncIOClient,
 ):
@@ -20,17 +19,19 @@ async def add_instance(
         """
         with new_instance := (
             insert NodeInstance {
-                node := ( select Node filter .id = $node )
-                state := $state,
-                workflow := ( select Workflow filter .id = $workflow ),
-                depends := $depends,
+                node := ( select Node filter .id = <uuid>$node ),
+                state := <str>$state,
+                workflow := ( select Workflow filter .id = <uuid>$workflow ),
+                depends := <int16>$depends
             }
         )
         select new_instance { %s }
         """
         % _node_instance_attributes_query,
-        node=node,
+        node=node_instance["node"]["id"],
+        state=node_instance["state"],
         workflow=workflow,
+        depends=node_instance["depends"],
     )
     result = edge.obj_to_dict(res[0])
     return result
@@ -50,37 +51,40 @@ async def update_node_instance_relationships(
                 await client.query(
                     """
                     update NodeInstance
-                        filter .id = $instance_id
+                        filter .id = <uuid>$instance_id
                         set {
                             parents += (
                                 select detached NodeInstance filter .id = <uuid>$parent
                             )
                         };
                     """,
-                    parent,
+                    instance_id=instance_id,
+                    parent=parent["id"],
                 )
             for dep in depends_on:
                 await client.query(
                     """
                     update NodeInstance
-                        filter .id = $instance_id
+                        filter .id = <uuid>$instance_id
                         set {
                             depends_on += (
                                 select detached NodeInstace filter .id = <uuid>$dep
                             )
                     }
                     """,
-                    dep,
+                    instance_id=instance_id,
+                    dep=dep,
                 )
             await client.query(
                 """
                     update NodeInstance
-                        filter .id = $instance_id
+                        filter .id = <uuid>$instance_id
                         set {
-                            decision_options := array<uuid>$decision_options
+                            decision_options := <array<uuid>>$decision_options
                         }
                 """,
-                decision_options,
+                instance_id=instance_id,
+                decision_options=decision_options,
             )
 
 

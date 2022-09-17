@@ -11,7 +11,7 @@ _workflow_attributes_query = """
     template_active,
     state,
     flowstate :{ state, created, last_updated },
-    node_instances :{ state, parents, children, depends, depends_on, node :{ name, version, config, base, type } },
+    node_instances :{ state, parents, children, depends, depends_on, decision_options, node :{ name, version, config, base, type } },
 """  # noqa: E501 line too long
 
 

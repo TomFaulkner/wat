@@ -66,7 +66,7 @@ async def execute_wf(workflow):
     node_ran = True
 
     ran_at_least_one = False
-    while node_ran and await _has_available_instance(workflow["node_instances"]):
+    while node_ran and _has_available_instance(workflow["node_instances"]):
         logger.debug(pformat(workflow))
         node_ran = await _execute_wf(workflow)
         if not ran_at_least_one:
@@ -83,7 +83,7 @@ async def execute_wf(workflow):
     return ran_at_least_one
 
 
-async def _has_available_instance(node_instances):
+def _has_available_instance(node_instances):
     return any(ni for ni in node_instances if ni["state"] in ("waiting", "blocked"))
 
 

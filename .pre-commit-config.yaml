@@ -1,13 +1,13 @@
 repos:
 -   repo: https://github.com/ambv/black
-    rev: 22.3.0
+    rev: 22.8.0
     hooks:
     - id: black
       language_version: python3.10
--   repo: https://gitlab.com/pycqa/flake8
-    rev: 4.0.1
+-   repo: https://github.com/john-hen/Flake8-pyproject
+    rev: 1.1.0.post0
     hooks:
-    - id: flake8
+    - id: Flake8-pyproject
 -   repo: https://github.com/pycqa/isort
     rev: 5.10.1
     hooks:

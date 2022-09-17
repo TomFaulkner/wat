@@ -1,8 +1,9 @@
 import logging
+from functools import partial
 from typing import Any
 
 from .. import process
-from ..data import workflows
+from ..data import node, workflows
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
     """Makes a copy of each node instance and replaces id parents and depends_on with
     new ids.
     """
+
     ids = {}
     for ni in node_instances:
         stripped_ni = _strip_ni(ni)
@@ -35,7 +37,7 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
         for dep in ni["depends_on"]:
             dep["id"] = ids[dep["id"]]
 
-        ni["decision_options"] = [ids[o] for o in ni["decision_options"]]
+        ni["decision_options"] = [ids[o] for o in ni["decision_options"] or []]
 
         ni["id"] = ids[ni["id"]]
         # this needs to be adapted to data.node.update_node_instance_relationships
@@ -44,11 +46,22 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
         await update_node_children(ni)
 
 
+async def _adapter_upd_ni_rels(ni):
+    return await node.update_node_instance_relationships(
+        ni["id"], ni["parents"], ni["depends_on"], ni["decision_options"]
+    )
+
+
 async def create_instance(wf_id: str) -> dict[str, Any]:
     wf = await workflows.get_by_id(wf_id)
     del wf["id"]
     del wf["flowstate"]
-    return await create(wf)
+    node_instances = wf.pop("node_instances")
+    new_wf = await create(wf)
+
+    add_instance = partial(node.add_instance, workflow=new_wf["id"])
+    await _create_node_instances(node_instances, add_instance, _adapter_upd_ni_rels)
+    return await workflows.get_by_id(new_wf["id"])
 
 
 async def get_by_id(wf_id: str) -> dict[str, Any]:
