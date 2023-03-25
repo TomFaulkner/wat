@@ -8,8 +8,8 @@ from ..data import node, workflows
 logger = logging.getLogger(__name__)
 
 
-async def create(workflow: dict) -> dict[str, Any]:
-    return await workflows.add(workflow)
+async def create(workflow: dict, tx) -> dict[str, Any]:
+    return await workflows.add(workflow, client=tx)
 
 
 def _strip_ni(node_instance):
@@ -61,14 +61,23 @@ async def _adapter_upd_ni_rels(ni, tx):
 
 
 async def create_instance(wf_id: str, tx) -> dict[str, Any]:
-    wf = await workflows.get_active_template_by_id(wf_id)
+    wf = await workflows.get_active_template_by_id(wf_id, client=tx)
     wf = _strip_wf(wf.copy())
     node_instances = wf.pop("node_instances")
-    new_wf = await create(wf)
+    new_wf = await create(wf, tx)
 
     add_instance = partial(node.add_instance, workflow=new_wf["id"])
     await _create_node_instances(node_instances, add_instance, _adapter_upd_ni_rels, tx)
-    return await workflows.get_by_id(new_wf["id"])
+    return await workflows.get_by_id(new_wf["id"], client=tx)
+
+
+async def create_and_run(wf_id: str, tx):
+    wf = await create_instance(wf_id, tx=tx)
+    await workflows.update_flow_state(
+        wf["flowstate"]["id"], {"greeting_name": "tom"}, tx
+    )
+    await execute_workflow(wf["id"], tx=tx)
+    return await workflows.get_by_id(wf["id"], client=tx)
 
 
 async def get_by_id(wf_id: str) -> dict[str, Any]:
@@ -81,13 +90,18 @@ async def get(template_only=False, active_template_only=False) -> list[dict[str,
     )
 
 
-async def execute_workflow(wf_id: str, suppress_updates=False):
-    wf = await workflows.get_by_id(wf_id)
+async def execute_workflow(wf_id: str, suppress_updates=False, tx=None):
+    wf = await workflows.get_by_id(wf_id, client=tx)
     await process.execute_wf(wf)
-    if not suppress_updates:  # this is hacky, should receive a dep injection instead
-        pass
-        # update workflow state and node instances
 
+    # TODO: try and test this
+    if not suppress_updates or not tx:
+        await workflows.update_flow_state(
+            wf["flowstate"]["id"], wf["flowstate"]["state"], tx
+        )
+        await workflows.update_state(wf_id, wf["state"], tx)
+        for ni in wf["node_instances"]:
+            await node.update_instance_state(ni["id"], ni["state"], client=tx)
     return True
 
 

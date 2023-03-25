@@ -20,9 +20,10 @@
       5. Continue to next node
 ** Ingestion
 - Ingestion Start nodes need an entry in ingestion url table
-  =site/ingest/my-name-friendly-goes-here=
+  =site/w/my-name-friendly-goes-here=
+  This would clone and start the workflow and add the relevant data to flowstate
 - If not a start node needs workflow instance as well
-  =site/ingest/some-workflow-uuid4-goes-here=
+  =site/ingest/id/some-workflow-uuid4-goes-here=
   - Maybe this could just be the id of the ingestion node
   - Might not need /ingest at all, just check all URL variables for uuid or string
 - If next node is a response node process it and respond
@@ -45,3 +46,5 @@
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
 ** ToDo
+- saving state and changes
+- celery or other to actually run the workflows

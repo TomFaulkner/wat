@@ -42,10 +42,10 @@ class Workflow(WorkflowCreate):
 
 
 @router.post("/workflows", response_model=Workflow)
-async def post(workflow_: WorkflowCreate) -> Workflow:
+async def post(workflow_: WorkflowCreate, tx=Depends(depends.edge_tx)) -> Workflow:
     start_state = "template" if workflow_.template else "waiting"
     wf = workflow_.dict() | {"state": start_state}
-    return Workflow(**(await workflow.create(wf)))
+    return Workflow(**(await workflow.create(wf, tx)))
 
 
 @router.get("/workflows/{wf_id}", response_model=Workflow)
@@ -68,6 +68,11 @@ async def get_all(template_only=False, active_template_only=False) -> list[Workf
 async def instance(wf_id: UUID, tx=Depends(depends.edge_tx)) -> Workflow:
     with context.raise_data_errors():
         return await workflow.create_instance(wf_id, tx)
+
+
+@router.post("/workflows/create_and_run", response_model=Workflow)
+async def car(wf_id: UUID, tx=Depends(depends.edge_tx)):
+    return await workflow.create_and_run(str(wf_id), tx=tx)
 
 
 @router.put("/workflows/{wf_id}/flowstate", response_model=FlowState)

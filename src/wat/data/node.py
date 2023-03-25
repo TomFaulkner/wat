@@ -116,3 +116,22 @@ async def add_node(
     )
     result = edge.obj_to_dict(res[0])
     return result
+
+
+@inject_client
+async def update_instance_state(
+    instance_id: str,
+    state: str,
+    client: AsyncIOClient,
+) -> None:
+    await client.query(
+        """
+        update NodeInstance
+          filter .id = <uuid>$instance_id
+          set {
+            state := <str>$state
+          }
+        """,
+        instance_id=instance_id,
+        state=state,
+    )

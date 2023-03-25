@@ -37,7 +37,9 @@ _R = TypeVar("_R")
 
 def inject_client(func: Callable[_P, _R]) -> Callable[_P, _R]:
     def wrapper(*args: _P.args, **kwargs: _P.kwargs):
-        return func(*args, client=client, **kwargs)
+        if "client" not in kwargs:
+            return func(*args, client=client, **kwargs)
+        return func(*args, **kwargs)
 
     return wrapper
 

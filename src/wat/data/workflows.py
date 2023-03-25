@@ -119,3 +119,15 @@ async def update_flow_state(fs_id: str, new_state: dict, tx) -> dict:
     result = edge.obj_to_dict(res)
     result["state"] = json.loads(res.state)
     return result
+
+
+async def update_state(wf_id: str, new_state: str, tx) -> None:
+    await tx.query(
+        """
+        update Workflow
+          filter .id = <uuid>$wf_id
+          set { state := <str>$new_state }
+        """,
+        wf_id=wf_id,
+        new_state=new_state,
+    )
