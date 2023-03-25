@@ -59,7 +59,3 @@ async def test_create_instance_replaces_ids():
     assert calls[2]["id"] == "3p"
     assert calls[2]["decision_options"] == []
     assert calls[2]["depends_on"] == [{"id": "1p"}, {"id": "2p"}]
-
-
-async def test_execute_workflow():
-    pass

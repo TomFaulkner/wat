@@ -12,6 +12,7 @@ async def _execute_wf(wf):
         if instance["state"] == "waiting" and _check_required_state(
             instance, wf["flowstate"]["state"]
         ):
+            logger.debug("Executing %s", instance["id"])
             match instance["node"]["base"]:
                 case "action":
                     module_name = (
@@ -52,6 +53,7 @@ async def _execute_wf(wf):
                 case "finish":
                     instance["state"] = "completed"
                     wf["state"] = "completed"
+                    logger.info("Finished workflow. %s", wf["id"])
     return node_ran
 
 
@@ -63,19 +65,25 @@ async def _execute_action_node(
 
 
 async def execute_wf(workflow):
-    logger.debug(workflow)
+    logger.debug("Executing wf:%s ::: %s", workflow["id"], workflow)
 
     node_ran = True
 
     ran_at_least_one = False
     while node_ran and _has_available_instance(workflow["node_instances"]):
-        logger.debug(pformat(workflow))
         node_ran = await _execute_wf(workflow)
+        logger.debug(
+            "Node states: %s", [ni["state"] for ni in workflow["node_instances"]]
+        )
         if not ran_at_least_one:
             ran_at_least_one = node_ran
+
+        # TODO: move this to its own function, try_update_to_waiting_state or similar
         for ni in workflow["node_instances"]:
+            logger.debug("Examining NI %s", ni["id"])
             if not ni["state"] == "blocked":
                 continue
+
             parent_ids = _parent_ids(ni)
             parents = _get_parent_nodes(parent_ids, workflow["node_instances"])
             if blocked_node_can_run(
@@ -83,7 +91,7 @@ async def execute_wf(workflow):
             ):
                 ni["state"] = "waiting"
 
-    logger.debug(pformat(workflow))
+    logger.debug("Ending execute_wf: %s", pformat(workflow))
     return ran_at_least_one
 
 
@@ -103,12 +111,20 @@ def _check_required_state(ni, wf_state):
 def blocked_node_can_run(node, parents, parent_ids, wf_state) -> bool:
     completed_parents = [p for p in parents if p["state"] == "completed"]
     if not len(completed_parents) >= node["depends"]:
+        logger.debug(
+            "Node Instance %s can not run. Not enough depends met.", node["id"]
+        )
         return False
 
     completed_ids = {cp["id"] for cp in completed_parents}
     depends_ids = {cp["id"] for cp in node["depends_on"]}
     if not completed_ids >= depends_ids:
+        logger.debug(
+            "Node Instance %s can not run. Not all depends_on IDs met.", node["id"]
+        )
         return False
+
+    logger.debug("Node Instance %s can run.", node["id"])
 
     return _check_required_state(node, wf_state)
 
