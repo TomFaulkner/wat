@@ -11,20 +11,14 @@ dynaconf = "^3.1.9"
 uvicorn = "^0.18.3"
 edgedb = "^0.24.0"
 
-[tool.poetry.dev-dependencies]
-pytest = ">=7"
-black = "^22.6.0"
-isort = "^5.10.1"
-pre-commit = "^2.20.0"
-flake8 = "^5.0.4"
-pytest-asyncio = "^0.19.0"
-Flake8-pyproject = "^1.1.0"
-
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
 flake8 = "^6.0.0"
 black = "^23.1.0"
 flake8-pyproject = "^1.2.3"
+pytest = ">=7"
+pre-commit = "^2.20.0"
+pytest-asyncio = "^0.19.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
