@@ -104,4 +104,3 @@ def mock_workflow():
 async def test_execute_wf(mock_workflow):
     await process.execute_wf(mock_workflow)
     assert mock_workflow["state"] == "completed"
-    assert False
