@@ -58,7 +58,7 @@ def mock_workflow():
             {
                 "children": ["ffffffff-2bd2-11ed-b25b-ab922a707b03"],
                 "decision_options": [],
-                "depends": 1,
+                "depends": -1,
                 "depends_on": [],
                 "id": "550fa37c-36a6-11ed-a892-e3bf2af53985",
                 "node": {
