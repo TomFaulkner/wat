@@ -75,10 +75,16 @@ async def get_by_id(wf_id: str) -> dict[str, Any]:
     return await workflows.get_by_id(wf_id)
 
 
+async def get(template_only=False, active_template_only=False) -> list[dict[str, Any]]:
+    return await workflows.get(
+        template_only=template_only, active_template_only=active_template_only
+    )
+
+
 async def execute_workflow(wf_id: str, suppress_updates=False):
     wf = await workflows.get_by_id(wf_id)
     await process.execute_wf(wf)
-    if not suppress_updates:
+    if not suppress_updates:  # this is hacky, should receive a dep injection instead
         pass
         # update workflow state and node instances
 

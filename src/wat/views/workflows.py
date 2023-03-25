@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from enum import Enum
 from typing import Any
@@ -47,10 +48,20 @@ async def post(workflow_: WorkflowCreate) -> Workflow:
     return Workflow(**(await workflow.create(wf)))
 
 
-@router.get("/workflows", response_model=Workflow)
+@router.get("/workflows/{wf_id}", response_model=Workflow)
 async def get(wf_id: UUID) -> Workflow:
     with context.raise_data_errors():
         return Workflow(**(await workflow.get_by_id(wf_id)))
+
+
+logger = logging.getLogger(__name__)
+
+
+@router.get("/workflows", response_model=list[Workflow])
+async def get_all(template_only=False, active_template_only=False) -> list[Workflow]:
+    with context.raise_data_errors():
+        workflows = await workflow.get(template_only, active_template_only)
+        return [Workflow(**(wf)) for wf in workflows]
 
 
 @router.post("/workflows/create_instance", response_model=Workflow)

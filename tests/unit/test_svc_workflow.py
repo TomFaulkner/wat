@@ -36,7 +36,7 @@ node_instances = [
 ]
 
 
-async def test_create_instances_replaces_ids():
+async def test_create_instance_replaces_ids():
     calls = []
 
     async def update_node_instance_relationships(node_instance, tx):
@@ -59,3 +59,7 @@ async def test_create_instances_replaces_ids():
     assert calls[2]["id"] == "3p"
     assert calls[2]["decision_options"] == []
     assert calls[2]["depends_on"] == [{"id": "1p"}, {"id": "2p"}]
+
+
+async def test_execute_workflow():
+    pass

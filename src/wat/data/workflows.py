@@ -72,6 +72,35 @@ get_active_template_by_id = partial(
 )
 
 
+@inject_client
+async def get(client: AsyncIOClient, template_only=False, active_template_only=False):
+    template_filter = ".template = true" if template_only else ""
+    active_template_filter = ".template_active = true" if active_template_only else ""
+    filter_ = (
+        "filter " + " and ".join((template_filter, active_template_filter))
+        if any((template_filter, active_template_filter))
+        else ""
+    )
+    res = await client.query(
+        """
+        select Workflow { %s } %s;
+        """
+        % (_workflow_attributes_query, filter_)
+    )
+    results = edge.set_to_list(res)
+    for result in results:
+        result["flowstate"]["state"] = json.loads(result["flowstate"]["state"])
+        if result["flowstate"]["state"] == "{}":
+            result["flowstate"]["state"] = {}
+    return results
+
+
+get_template_by_id = partial(get_by_id, template_only=True)
+get_active_template_by_id = partial(
+    get_by_id, template_only=True, active_template_only=True
+)
+
+
 async def update_flow_state(fs_id: str, new_state: dict, tx) -> dict:
     res = await tx.query_required_single(
         """
