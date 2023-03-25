@@ -1,15 +1,15 @@
 repos:
 -   repo: https://github.com/ambv/black
-    rev: 22.8.0
+    rev: 23.1.0
     hooks:
     - id: black
-      language_version: python3.10
+      language_version: python3.11
 -   repo: https://github.com/john-hen/Flake8-pyproject
-    rev: 1.1.0.post0
+    rev: 1.2.3
     hooks:
     - id: Flake8-pyproject
 -   repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+    rev: 5.12.0
     hooks:
     - id: isort
       args: ["--profile", "black", "--filter-files"]
