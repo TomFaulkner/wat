@@ -34,4 +34,14 @@
 - workflow template: 550ef5da-36a6-11ed-a892-bb8818cce9dc
 - node: 9a465bea-2bd2-11ed-b25b-ab922a707b03
 - node instance: 1f37564c-2bd3-11ed-9214-97a3e3a9190a
+
+** Node Instance Relationships
+- NIs know parents : list[dict[str, UUID]]
+- NI.children: list[dict[id, UUID]] is done via reverse lookup of NI.parents
+- NI.depends: int how many parents a child should wait for (may be less than len(NI.parents))
+  - -1: all parents
+  - 0: no parents
+  - >1: N parents
+- NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
+
 ** ToDo
