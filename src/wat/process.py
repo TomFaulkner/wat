@@ -22,14 +22,13 @@ async def _execute_wf(wf):
                         success, state_update = await _execute_action_node(
                             instance, wf["flowstate"]["state"], module_name
                         )
-                    except Exception as e:
+                    except Exception:
                         instance["state"] = "error"
                         logger.exception(
-                            "Workflow (%s:%s) failed to run %s: %s",
+                            "Workflow (%s:%s) failed to run %s",
                             wf["id"],
                             instance["id"],
                             module_name,
-                            str(e),
                         )
                         continue
 

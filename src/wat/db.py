@@ -1,13 +1,14 @@
 import uuid
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Callable, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
 
 import edgedb
 from edgedb import AsyncIOClient, create_async_client
 from fastapi.encoders import jsonable_encoder
 from pydantic import json
 
-client: AsyncIOClient = None
+client: AsyncIOClient | None = None
 
 
 async def create_pool() -> None:
