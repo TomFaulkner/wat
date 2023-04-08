@@ -39,11 +39,8 @@ def edge(c):
 
 @task
 def edge_single(c):
-    c.run(
-        """
-    edgedb-py --target async
-    """
-    )
+    c.run("edgedb-py --target async")
+
     import glob
 
     import edge_model_gen as emg
@@ -55,11 +52,14 @@ def edge_single(c):
             f.write(output)
 
     c.run(
-        f"""
+        """
     poetry install
+    echo "\nisort\n"
     isort --float-to-top queries
-    black queries
-    """  # noqa E501: line too long
+    echo "\nblack\n"
+    black queries/*.py
+    cp queries/*.py src/wat/queries
+    """  # E501: line too long
     )
 
 
