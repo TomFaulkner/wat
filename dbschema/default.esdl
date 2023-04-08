@@ -60,6 +60,7 @@ module default {
             )
         }
         link flowstate -> FlowState;
+        link start_requirements -> StartRequirements;
         multi link node_instances := .<workflow[is NodeInstance];
     }
 
@@ -73,5 +74,20 @@ module default {
          required property friendly_name -> str;
          required link workflow -> Workflow;
          required property active -> bool;
+    }
+
+    # do this and add an array of this do nodes?
+    # do i also add a table of valid state attributes and limit to only those?
+    # this should use dynamic pydantic models to validate
+    # if the valid state attributes table is a thing drop name/type and link to that table, keep defaults?
+    # or should defaults come from the attributes table?
+    type StartRequirements {
+        required multi link attribs -> StateAttributes;
+    }
+
+    type StateAttributes {
+        required property name -> str;
+        required property type -> str;
+        property default_value -> str;
     }
 }
