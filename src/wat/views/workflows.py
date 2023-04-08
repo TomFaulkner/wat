@@ -34,11 +34,22 @@ class WorkflowCreate(BaseModel):
     template_active: bool = False
 
 
+class StateAttributes(BaseModel):
+    name: str
+    type: str
+    default_value: str
+
+
+class StartRequirements(BaseModel):
+    attribs: list[StateAttributes]
+
+
 class Workflow(WorkflowCreate):
     id: UUID
     state: str
     flowstate: FlowState
     node_instances: Any
+    start_requirements: StartRequirements | None
 
 
 @router.post("/workflows", response_model=Workflow)
