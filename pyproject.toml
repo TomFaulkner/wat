@@ -57,11 +57,12 @@ select = [
   "RUF",
   "PGH", # pygrep
   "PTH", # pathlib
-  # "SIM", # simplify
+  "SIM", # simplify
 ]
 target-version = "py311"
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["E402"]
 "src/wat/views/*.py" = ["B008"]  # Do not perform function call 'Depends' in argument defaults
+# TODO: fix these
 "tasks.py" = ["PGH004", "PTH123", "PGH004"]

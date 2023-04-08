@@ -80,7 +80,7 @@ async def execute_wf(workflow):
         # TODO: move this to its own function, try_update_to_waiting_state or similar
         for ni in workflow["node_instances"]:
             logger.debug("Examining NI %s", ni["id"])
-            if not ni["state"] == "blocked":
+            if ni["state"] != "blocked":
                 continue
 
             parent_ids = _parent_ids(ni)

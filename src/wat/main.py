@@ -21,9 +21,8 @@ def load_modules(app=None):
     for ep in entry_points()["wat.modules"]:
         logger.info("Loading module: %s", ep.name)
         mod = ep.load()
-        if app:
-            if init_app := getattr(mod, "init_app", None):
-                init_app(app)
+        if app and (init_app := getattr(mod, "init_app", None)):
+            init_app(app)
 
 
 def get_app():
