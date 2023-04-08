@@ -46,5 +46,21 @@
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
 ** ToDo
-- saving state and changes
-- celery or other to actually run the workflows
+- [X] saving state and changes
+- [ ] cleanup tx/client issues
+- [ ] celery or other to actually run the workflows
+- [ ] system to do inserts for db start state (required attributes and such)
+- [ ] system to populate db for tests
+- [ ] functional tests
+- [ ] contract testing
+- [ ] start node needs to take validated inputs to enter into flowstate
+- [ ] api node needs to validate whatever it wants to store into flowstate
+- [ ] dynamic validation system for the above two
+- [ ] fastapi endpoint for starting workflow should take a dict of state for start
+- [ ] interactive node
+- [ ] GUI to configure/build
+- [ ] GUI Dashboard
+- [ ] CLI?
+
+- [ ] Try individual query files and/or directories (edgedb-py doesn't innately do different directories)
+- [ ] Validation on Start Requirements
