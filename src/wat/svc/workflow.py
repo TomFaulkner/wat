@@ -73,6 +73,7 @@ async def create_instance(wf_id: str, tx) -> dict[str, Any]:
 
 async def create_and_run(wf_id: str, tx):
     wf = await create_instance(wf_id, tx=tx)
+    # TODO: add start requirements validation and populate in flowstate
     await workflows.update_flow_state(
         wf["flowstate"]["id"], {"greeting_name": "tom"}, tx
     )

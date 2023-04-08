@@ -7,8 +7,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from ..data import queries_async as q
 from ..lib import context, depends
 from ..svc import workflow
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -37,11 +40,7 @@ class WorkflowCreate(BaseModel):
 class StateAttributes(BaseModel):
     name: str
     type: str
-    default_value: str
-
-
-class StartRequirements(BaseModel):
-    attribs: list[StateAttributes]
+    default_value: str | None
 
 
 class Workflow(WorkflowCreate):
@@ -49,7 +48,7 @@ class Workflow(WorkflowCreate):
     state: str
     flowstate: FlowState
     node_instances: Any
-    start_requirements: StartRequirements | None
+    start_requirements: list[StateAttributes]
 
 
 @router.post("/workflows", response_model=Workflow)
@@ -63,9 +62,6 @@ async def post(workflow_: WorkflowCreate, tx=Depends(depends.edge_tx)) -> Workfl
 async def get(wf_id: UUID) -> Workflow:
     with context.raise_data_errors():
         return Workflow(**(await workflow.get_by_id(wf_id)))
-
-
-logger = logging.getLogger(__name__)
 
 
 @router.get("/workflows", response_model=list[Workflow])
@@ -100,6 +96,24 @@ async def update_flowstate(
 ) -> FlowState:
     with context.raise_data_errors():
         return await workflow.update_flow_state(wf_id, new_state, tx)
+
+
+@router.patch("/workflows/{wf_id}/start_requirements")
+async def replace_start_requirements(
+    wf_id: UUID, attribute_ids: list[UUID], tx=Depends(depends.edge_tx)
+) -> None:
+    with context.raise_data_errors():
+        await q.workflow_start_requirements_replace(
+            tx, id=wf_id, state_ids=attribute_ids
+        )
+
+
+@router.patch("/workflows/{wf_id}/start_requirements")
+async def add_start_requirements(
+    wf_id: UUID, attribute_ids: list[UUID], tx=Depends(depends.edge_tx)
+) -> None:
+    with context.raise_data_errors():
+        await q.workflow_start_requirements_add(tx, id=wf_id, state_ids=attribute_ids)
 
 
 def init_app(app):

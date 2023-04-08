@@ -60,7 +60,7 @@ module default {
             )
         }
         link flowstate -> FlowState;
-        link start_requirements -> StartRequirements;
+        multi link start_requirements -> StateAttributes;
         multi link node_instances := .<workflow[is NodeInstance];
     }
 
@@ -81,13 +81,11 @@ module default {
     # this should use dynamic pydantic models to validate
     # if the valid state attributes table is a thing drop name/type and link to that table, keep defaults?
     # or should defaults come from the attributes table?
-    type StartRequirements {
-        required multi link attribs -> StateAttributes;
-    }
 
     type StateAttributes {
         required property name -> str;
         required property type -> str;
         property default_value -> str;
+        property active -> bool { default := true };
     }
 }
