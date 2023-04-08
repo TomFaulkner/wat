@@ -2,6 +2,8 @@ import logging
 from functools import partial
 from typing import Any
 
+import pydantic
+
 from .. import process
 from ..data import node, workflows
 
@@ -64,6 +66,11 @@ async def create_instance(wf_id: str, tx) -> dict[str, Any]:
     wf = await workflows.get_active_template_by_id(wf_id, client=tx)
     wf = _strip_wf(wf.copy())
     node_instances = wf.pop("node_instances")
+    start_requirements = wf.pop("start_requirements")
+    if start_requirements:
+        wf["start_requirements"] = [str(sr["id"]) for sr in start_requirements]
+    else:
+        wf["start_requirements"] = []
     new_wf = await create(wf, tx)
 
     add_instance = partial(node.add_instance, workflow=new_wf["id"])
@@ -71,14 +78,43 @@ async def create_instance(wf_id: str, tx) -> dict[str, Any]:
     return await workflows.get_by_id(new_wf["id"], client=tx)
 
 
-async def create_and_run(wf_id: str, tx):
+class NoStartState(Exception):
+    """This workflow requires a starting attributes."""
+
+    def __init__(self, requirements: dict):
+        self.requirements = requirements
+
+
+async def create_and_run(tx, wf_id: str, start: dict[str, Any] | None = None):
+    """Start an new workflow instance.
+
+    This should be the main way workflows are started."""
+
     wf = await create_instance(wf_id, tx=tx)
-    # TODO: add start requirements validation and populate in flowstate
-    await workflows.update_flow_state(
-        wf["flowstate"]["id"], {"greeting_name": "tom"}, tx
-    )
+    start_attrs = {}
+    if wf["start_requirements"]:
+        start_attrs = _validate_start_requirements(
+            wf["start_requirements"], start
+        ).dict()
+
+    await workflows.update_flow_state(wf["flowstate"]["id"], start_attrs, tx)
     await execute_workflow(wf["id"], tx=tx)
     return await workflows.get_by_id(wf["id"], client=tx)
+
+
+def _validate_start_requirements(
+    start_reqs: dict, attributes: dict | None
+) -> pydantic.BaseModel:
+    if not attributes:
+        raise NoStartState(requirements=start_reqs)
+    fields = {}
+    for f in start_reqs:
+        if f["default_value"]:
+            fields[f["name"]] = f["default_value"]
+            continue
+        fields[f["name"]] = (f["type"], ...)
+    model = pydantic.create_model("StartRequirements", **fields)
+    return model(**attributes)
 
 
 async def get_by_id(wf_id: str) -> dict[str, Any]:

@@ -1,4 +1,5 @@
 import json
+import logging
 from functools import partial
 
 from edgedb import AsyncIOClient
@@ -6,6 +7,7 @@ from edgedb import AsyncIOClient
 from ..db import inject_client
 from ..lib import edge
 
+logger = logging.getLogger(__name__)
 _workflow_attributes_query = """
     id,
     template,
@@ -21,6 +23,7 @@ _flowstate_attributes_query = "id, state, created, last_updated"
 
 @inject_client
 async def add(workflow, client: AsyncIOClient):
+    logger.debug(workflow)
     res = await client.query(
         """
         with new_workflow := (
@@ -34,6 +37,10 @@ async def add(workflow, client: AsyncIOClient):
                         created := datetime_current(),
                         last_updated := datetime_current(),
                     }
+                ),
+                start_requirements := (
+                    select detached StateAttributes
+                    filter .id in std::array_unpack(<array<uuid>>$start_requirements)
                 )
             }
         )

@@ -4,7 +4,9 @@ from enum import Enum
 from typing import Any
 from uuid import UUID
 
+import pydantic
 from fastapi import APIRouter, Depends
+from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 
 from ..data import queries_async as q
@@ -77,9 +79,20 @@ async def instance(wf_id: UUID, tx=Depends(depends.edge_tx)) -> Workflow:
         return await workflow.create_instance(wf_id, tx)
 
 
+class StartAttributes(BaseModel):
+    start: dict | None
+
+
 @router.post("/workflows/create_and_run", response_model=Workflow)
-async def car(wf_id: UUID, tx=Depends(depends.edge_tx)):
-    return await workflow.create_and_run(str(wf_id), tx=tx)
+async def car(wf_id: UUID, start: StartAttributes, tx=Depends(depends.edge_tx)):
+    try:
+        return await workflow.create_and_run(tx, str(wf_id), start.start)
+    except workflow.NoStartState as e:
+        raise HTTPException(
+            422, f"This workflow requires starting attributes. {e.requirements}"
+        ) from e
+    except pydantic.error_wrappers.ValidationError as e:
+        raise HTTPException(422, str(e)) from e
 
 
 @router.put("/workflows/{wf_id}/flowstate", response_model=FlowState)
