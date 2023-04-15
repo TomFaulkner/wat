@@ -33,6 +33,8 @@ module default {
                 'error', 'waiting', 'blocked'
             )
         };
+        property config -> json;
+
         multi link parents -> NodeInstance;
         multi link children := .<parents[is NodeInstance];
 
@@ -51,8 +53,10 @@ module default {
 # when a decision is made decision nodeinstance should find its children and cancel those not decided
 
     type Workflow {
+        # descriptive only
         property name -> str;
         property version -> int16;
+
         property template -> bool;
         property template_active -> bool;
         required property state -> str {
