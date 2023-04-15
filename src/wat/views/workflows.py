@@ -47,6 +47,8 @@ class StateAttributes(BaseModel):
 
 class Workflow(WorkflowCreate):
     id: UUID
+    name: str | None
+    version: int | None
     state: str
     flowstate: FlowState
     node_instances: Any
