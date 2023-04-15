@@ -46,6 +46,9 @@
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
 ** ToDo
+- [ ] Decision Node
+- [ ] Math Decision Node processing (nodes.decision NotImplementedError)
+- [ ] Workflows mark themselves complete
 - [ ] Validation on Attributes
 - [ ] cleanup tx/client issues
 - [ ] use generated queries
