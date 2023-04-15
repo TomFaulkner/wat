@@ -10,6 +10,8 @@ from ..lib import edge
 logger = logging.getLogger(__name__)
 _workflow_attributes_query = """
     id,
+    name,
+    version,
     template,
     template_active,
     state,

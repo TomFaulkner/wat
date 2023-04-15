@@ -51,6 +51,8 @@ module default {
 # when a decision is made decision nodeinstance should find its children and cancel those not decided
 
     type Workflow {
+        property name -> str;
+        property version -> int16;
         property template -> bool;
         property template_active -> bool;
         required property state -> str {
