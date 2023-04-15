@@ -10,10 +10,11 @@ def format(c):
         poetry install
         poetry run ssort src tests
         poetry run isort -l 88 --up --tc --float-to-top src tests
+        poetry run ruff --fix src tests
         poetry run black src tests
-        poetry run ruff src tests
         poetry run flake8 src tests
-        """
+        """,
+        pty=True,
     )
 
 

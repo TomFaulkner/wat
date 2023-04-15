@@ -2,6 +2,8 @@ from invoke import task
 
 edge = "EDGEDB_INSTANCE=ca_test"
 
+pr = "poetry run"
+
 
 def pytest_params(lf, debug):
     lf = "--lf" if lf else ""
@@ -11,7 +13,10 @@ def pytest_params(lf, debug):
 
 @task
 def unit(c, lf=False, debug=False):
-    c.run(f"poetry run pytest {pytest_params(lf, debug)} tests/unit")
+    c.run(
+        f"{pr} pytest --code-highlight=yes {pytest_params(lf, debug)} tests/unit",
+        pyt=True,
+    )
 
 
 @task
@@ -27,7 +32,7 @@ def test_db(c):
 
 @task(test_db)
 def func(c, lf=False, debug=False):
-    c.run(f"{edge} poetry run pytest {pytest_params(lf, debug)} tests/functional")
+    c.run(f"{edge} {pr} pytest {pytest_params(lf, debug)} tests/functional")
 
 
 @task(test_db)
