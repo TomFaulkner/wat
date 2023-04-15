@@ -797,6 +797,20 @@ files = [
 ]
 
 [[package]]
+name = "ssort"
+version = "0.11.6"
+description = "The python statement sorter"
+category = "dev"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "ssort-0.11.6.tar.gz", hash = "sha256:21fec493487f32dff50d30efa5b6aad18286e9817600b64bfe686ae062bae7ae"},
+]
+
+[package.dependencies]
+pathspec = ">=0.9.0"
+
+[[package]]
 name = "starlette"
 version = "0.19.1"
 description = "The little ASGI library that shines."
@@ -881,4 +895,4 @@ test = ["covdefaults (>=2.2.2)", "coverage (>=7.1)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d44f2a396037e9f33c0ef02b75942d25f7d0a65a67d8dee3a6f874231bcf91b0"
+content-hash = "0c489c54dd105a537c810c4879ab4a92e6d5ec238e1e3c3a246e67e591cfa77b"

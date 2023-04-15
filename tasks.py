@@ -8,6 +8,7 @@ def format(c):
     c.run(
         """
         poetry install
+        poetry run ssort src tests
         poetry run isort -l 88 --up --tc --float-to-top src tests
         poetry run black src tests
         poetry run ruff src tests

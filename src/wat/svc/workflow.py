@@ -85,6 +85,36 @@ class NoStartState(Exception):
         self.requirements = requirements
 
 
+def _validate_start_requirements(
+    start_reqs: dict, attributes: dict | None
+) -> pydantic.BaseModel:
+    if not attributes:
+        raise NoStartState(requirements=start_reqs)
+    fields = {}
+    for f in start_reqs:
+        if f["default_value"]:
+            fields[f["name"]] = f["default_value"]
+            continue
+        fields[f["name"]] = (f["type"], ...)
+    model = pydantic.create_model("StartRequirements", **fields)
+    return model(**attributes)
+
+
+async def execute_workflow(wf_id: str, suppress_updates=False, tx=None):
+    wf = await workflows.get_by_id(wf_id, client=tx)
+    await process.execute_wf(wf)
+
+    # TODO: try and test this
+    if not suppress_updates or not tx:
+        await workflows.update_flow_state(
+            wf["flowstate"]["id"], wf["flowstate"]["state"], tx
+        )
+        await workflows.update_state(wf_id, wf["state"], tx)
+        for ni in wf["node_instances"]:
+            await node.update_instance_state(ni["id"], ni["state"], client=tx)
+    return True
+
+
 async def create_and_run(tx, wf_id: str, start: dict[str, Any] | None = None):
     """Start an new workflow instance.
 
@@ -102,21 +132,6 @@ async def create_and_run(tx, wf_id: str, start: dict[str, Any] | None = None):
     return await workflows.get_by_id(wf["id"], client=tx)
 
 
-def _validate_start_requirements(
-    start_reqs: dict, attributes: dict | None
-) -> pydantic.BaseModel:
-    if not attributes:
-        raise NoStartState(requirements=start_reqs)
-    fields = {}
-    for f in start_reqs:
-        if f["default_value"]:
-            fields[f["name"]] = f["default_value"]
-            continue
-        fields[f["name"]] = (f["type"], ...)
-    model = pydantic.create_model("StartRequirements", **fields)
-    return model(**attributes)
-
-
 async def get_by_id(wf_id: str) -> dict[str, Any]:
     return await workflows.get_by_id(wf_id)
 
@@ -125,21 +140,6 @@ async def get(template_only=False, active_template_only=False) -> list[dict[str,
     return await workflows.get(
         template_only=template_only, active_template_only=active_template_only
     )
-
-
-async def execute_workflow(wf_id: str, suppress_updates=False, tx=None):
-    wf = await workflows.get_by_id(wf_id, client=tx)
-    await process.execute_wf(wf)
-
-    # TODO: try and test this
-    if not suppress_updates or not tx:
-        await workflows.update_flow_state(
-            wf["flowstate"]["id"], wf["flowstate"]["state"], tx
-        )
-        await workflows.update_state(wf_id, wf["state"], tx)
-        for ni in wf["node_instances"]:
-            await node.update_instance_state(ni["id"], ni["state"], client=tx)
-    return True
 
 
 async def replace_flow_state(wf_id: str, new_state: dict, tx) -> dict:
