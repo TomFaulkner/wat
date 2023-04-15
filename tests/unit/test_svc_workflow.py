@@ -1,10 +1,6 @@
 from wat.svc import workflow
 
 
-async def create_node_instance(node_instance, tx):
-    return node_instance | {"id": next(uu)}
-
-
 def uuid_generator():
     yield "1p"
     yield "2p"
@@ -12,6 +8,10 @@ def uuid_generator():
 
 
 uu = uuid_generator()
+
+
+async def create_node_instance(node_instance, tx):
+    return node_instance | {"id": next(uu)}
 
 
 node_instances = [

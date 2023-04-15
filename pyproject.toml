@@ -11,6 +11,7 @@ dynaconf = "^3.1.9"
 uvicorn = "^0.18.3"
 edgedb = "^1.3.0"
 httpx = "^0.23.3"
+jinja2 = "^3.1.2"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
