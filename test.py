@@ -15,7 +15,7 @@ def pytest_params(lf, debug):
 def unit(c, lf=False, debug=False):
     c.run(
         f"{pr} pytest --code-highlight=yes {pytest_params(lf, debug)} tests/unit",
-        pyt=True,
+        pty=True,
     )
 
 
