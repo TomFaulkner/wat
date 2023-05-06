@@ -24,7 +24,8 @@ async def add_instance(
                 state := <str>$state,
                 workflow := ( select Workflow filter .id = <uuid>$workflow ),
                 depends := <int16>$depends,
-                required_state := <array<str>>$required_state
+                required_state := <array<str>>$required_state,
+                sequence := <int16>$sequence
             }
         )
         select new_instance { %s }
@@ -35,6 +36,7 @@ async def add_instance(
         workflow=workflow,
         depends=node_instance["depends"],
         required_state=node_instance["required_state"] or [],
+        sequence=node_instance.get("sequence", 0),
     )
     result = edge.obj_to_dict(res[0])
     return result

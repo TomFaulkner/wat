@@ -105,6 +105,7 @@ async def execute_workflow(wf_id: str, suppress_updates=False, tx=None):
     await process.execute_wf(wf)
 
     # TODO: try and test this
+    # TODO: take advantage of the DI tx instead of suppress_updates bool
     if not suppress_updates or not tx:
         await workflows.update_flow_state(
             wf["flowstate"]["id"], wf["flowstate"]["state"], tx

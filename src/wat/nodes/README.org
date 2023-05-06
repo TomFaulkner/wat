@@ -1,0 +1,4 @@
+#+title: Nodes
+* Nodes
+- Nodes must end in ~_vX~ where ~X~ is the version number.
+- Code that does the underlying node specific functionality should also be here but not end in a version number. i.e. ~decision.py~ vs ~decision_v1.py~

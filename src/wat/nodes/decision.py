@@ -1,3 +1,8 @@
+"""
+Decision making functionality.
+
+See make_decision.
+"""
 import logging
 from copy import deepcopy
 from enum import Enum

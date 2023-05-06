@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Sequence
 from importlib import import_module
 from pprint import pformat
 from typing import Any
@@ -13,6 +14,16 @@ async def _execute_action_node(
     return await module.execute(node_instance["node"]["config"], state)
 
 
+DecisionChoiceNumber = int
+
+
+async def _execute_decision_node(
+    node_instance, state, module_name
+) -> tuple[DecisionChoiceNumber, dict]:
+    module = import_module(f"wat.nodes.{module_name}")
+    return await module.execute(node_instance["node"]["config"], state)
+
+
 def _check_required_state(ni, wf_state):
     if ni["required_state"]:
         for key in ni["required_state"]:
@@ -22,7 +33,21 @@ def _check_required_state(ni, wf_state):
     return True
 
 
-async def _execute_wf(wf):
+def _find_children(
+    node_instances: Sequence[dict], children_ids: Sequence[dict[str, str]]
+) -> list[dict]:
+    ids = [i["id"] for i in children_ids]
+    return [ni for ni in node_instances if ni["id"] in ids]
+
+
+def _cancel_children(elect: int, children: list[dict]):
+    for ni in children:
+        if ni["sequence"] != elect:
+            ni["state"] = "cancelled"
+    return children
+
+
+async def _execute_wf(wf) -> bool:
     node_ran = False
     for instance in wf["node_instances"]:
         if instance["state"] == "waiting" and _check_required_state(
@@ -34,6 +59,7 @@ async def _execute_wf(wf):
                     module_name = (
                         f"{instance['node']['name']}_v{instance['node']['version']}"
                     )
+                    # TODO: move this try/except to a decorator or another function
                     try:
                         success, state_update = await _execute_action_node(
                             instance, wf["flowstate"]["state"], module_name
@@ -48,27 +74,47 @@ async def _execute_wf(wf):
                         )
                         continue
 
-                    if success:
+                    if success:  # TODO: include this in the decorator
                         wf["flowstate"]["state"].update(state_update)
                         instance["state"] = "completed"
                         node_ran = True
+
                 case "decision":
-                    # node already knows its children
-                    # but, per workflow how does a decision node know which child is
-                    # which?
-                    # this could be based on array index, assuming the node
-                    # instances are always copied in same order
-                    # above doesn't work because parents don't know their children
-                    # do i need a new field for decision nodes to know their children?
-                    # cancel child node that wasn't among the elect
-                    pass
+                    module_name = (
+                        f"{instance['node']['name']}_v{instance['node']['version']}"
+                    )
+                    try:  # TODO: see above TODO
+                        decision, state_update = await _execute_decision_node(
+                            instance, wf["flowstate"]["state"], module_name
+                        )
+                        children = _find_children(
+                            wf["node_instances"], instance["children"]
+                        )
+                        _cancel_children(decision, children)  # mutates children
+
+                        wf["flowstate"]["state"].update(state_update)
+                        instance["state"] = "completed"
+                        node_ran = True
+                    except Exception:
+                        instance["state"] = "error"
+                        logger.exception(
+                            "Workflow (%s:%s) failed to run %s",
+                            wf["id"],
+                            instance["id"],
+                            module_name,
+                        )
+                        continue
+
                 case "start":
+                    logger.info("Started workflow. %s", wf["id"])
                     instance["state"] = "completed"
                     wf["state"] = "started"
+
                 case "finish":
                     instance["state"] = "completed"
                     wf["state"] = "completed"
                     logger.info("Finished workflow. %s", wf["id"])
+
     return node_ran
 
 
@@ -105,7 +151,7 @@ def _parent_ids(node):
     return {p["id"] for p in node["parents"]}
 
 
-async def execute_wf(workflow):
+async def execute_wf(workflow) -> bool:
     logger.debug("Executing wf:%s ::: %s", workflow["id"], workflow)
 
     node_ran = True

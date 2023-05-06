@@ -17,7 +17,7 @@ _workflow_attributes_query = """
     state,
     flowstate :{ state, created, last_updated },
     start_requirements :{ name, type, default_value },
-    node_instances :{ state, parents, children, depends, depends_on, decision_options, required_state, node :{ name, version, config, base, type } },
+    node_instances :{ state, parents, children, sequence, depends, depends_on, decision_options, required_state, node :{ name, version, config, base, type } },
 """  # noqa: E501 line too long
 
 _flowstate_attributes_query = "id, state, created, last_updated"
@@ -30,6 +30,8 @@ async def add(workflow, client: AsyncIOClient):
         """
         with new_workflow := (
             insert Workflow {
+                name := <str>$name,
+                version := <int16>$version,
                 template := <bool>$template,
                 template_active := <bool>$template_active,
                 state := <str>$state,
