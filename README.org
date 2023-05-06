@@ -1,3 +1,4 @@
+#+title: README
 * Workflow Automation Tool (WhAT)
 ** Workflow Instance Creation
 1. Workflow creation
@@ -47,6 +48,7 @@
 
 ** ToDo
 - [ ] Decision Node
+- [ ] Fix node instances need sequence number, workflows need name/version
 - [ ] Math Decision Node processing (nodes.decision NotImplementedError)
 - [ ] Workflows mark themselves complete
 - [ ] Validation on Attributes
@@ -64,6 +66,7 @@
 - [ ] GUI to configure/build
 - [ ] GUI Dashboard
 - [ ] CLI?
+- [ ] workflow starting other workflows
 - [X] saving state and changes
 - [X] Try individual query files and/or directories (edgedb-py doesn't innately do different directories)
 - [X] Validation on Start Requirements
