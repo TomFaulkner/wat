@@ -40,14 +40,10 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
         ids[ni["id"]] = new_node["id"]
 
     for ni in node_instances:
-        if not ni["decision_options"] and not ni["depends_on"] and not ni["parents"]:
-            continue
         for parent in ni["parents"]:
             parent["id"] = ids[parent["id"]]
         for dep in ni["depends_on"]:
             dep["id"] = ids[dep["id"]]
-
-        ni["decision_options"] = [ids[o] for o in ni["decision_options"] or []]
 
         ni["id"] = ids[ni["id"]]
         # this needs to be adapted to data.node.update_node_instance_relationships
@@ -58,7 +54,7 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
 
 async def _adapter_upd_ni_rels(ni, tx):
     return await node.update_node_instance_relationships(
-        ni["id"], ni["parents"], ni["depends_on"], ni["decision_options"], tx
+        ni["id"], ni["parents"], ni["depends_on"], tx
     )
 
 

@@ -39,7 +39,6 @@ module default {
         multi link children := .<parents[is NodeInstance];
         property sequence -> int16;
 
-        property decision_options -> array<uuid>;  # this is no longer needed?
         property required_state -> array<str>;
 
         # will wait for this number of parents in addition to depends_on

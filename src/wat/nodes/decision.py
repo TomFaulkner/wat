@@ -111,7 +111,7 @@ class ChoicesMustMatchStrategy(ValueError):
 
 def _decide(
     config: Config,
-) -> int:  # index of decision_options based on choices result
+) -> int:
     match config["decision"]["strategy"]:
         case "any" | "all":
             logger.debug("Decision based on any/all boolean")

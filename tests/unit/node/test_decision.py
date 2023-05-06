@@ -14,7 +14,7 @@ choices = {
     True: 1,
     False: 0,
     "other": 2,
-}  # assert len(choices) == len(ni.decision_options)
+}
 
 
 def test__decide_bool_any():

@@ -21,13 +21,12 @@ def mock_workflow():
                     {"id": "550fdce8-36a6-11ed-a892-3369233e6ccb"},
                     {"id": "550fa37c-36a6-11ed-a892-e3bf2af53985"},
                 ],
-                "decision_options": None,
                 "depends": 0,
                 "depends_on": [],
                 "id": "550f616e-36a6-11ed-a892-abe733d6e265",
                 "node": {
                     "base": "action",
-                    "config": '""',
+                    "config": {},
                     "id": "9a465bea-2bd2-11ed-b25b-ab922a707b03",
                     "name": "hello_world",
                     "type": "api",
@@ -38,8 +37,7 @@ def mock_workflow():
                 "state": "waiting",
             },
             {
-                "children": ["ffffffff-2bd2-11ed-b25b-ab922a707b03"],
-                "decision_options": [],
+                "children": [{"id": "ffffffff-2bd2-11ed-b25b-ab922a707b03"}],
                 "depends": 1,
                 "depends_on": [],
                 "id": "550fdce8-36a6-11ed-a892-3369233e6ccb",
@@ -56,8 +54,7 @@ def mock_workflow():
                 "state": "blocked",
             },
             {
-                "children": ["ffffffff-2bd2-11ed-b25b-ab922a707b03"],
-                "decision_options": [],
+                "children": [{"id": "ffffffff-2bd2-11ed-b25b-ab922a707b03"}],
                 "depends": -1,
                 "depends_on": [],
                 "id": "550fa37c-36a6-11ed-a892-e3bf2af53985",
@@ -75,7 +72,6 @@ def mock_workflow():
             },
             {
                 "children": [],
-                "decision_options": [],
                 "depends": 2,
                 "depends_on": [
                     {"id": "550f616e-36a6-11ed-a892-abe733d6e265"},
@@ -84,7 +80,7 @@ def mock_workflow():
                 "id": "ffffffff-2bd2-11ed-b25b-ab922a707b03",
                 "node": {
                     "base": "finish",
-                    "config": '""',
+                    "config": {},
                     "id": "ffffffff-2bd2-11ed-b25b-ab922a707b03",
                     "name": "finish",
                     "type": "flow",
@@ -116,13 +112,12 @@ def mock_workflow_w_api():
         "node_instances": [
             {
                 "children": [],
-                "decision_options": None,
                 "depends": 0,
                 "depends_on": [],
                 "id": "550f616e-36a6-11ed-a892-abe733d6e265",
                 "node": {
                     "base": "action",
-                    "config": '""',
+                    "config": {},
                     "id": "9a465bea-2bd2-11ed-b25b-ab922a707b03",
                     "name": "example_api_httpbin_org_post",
                     "type": "api",
@@ -134,13 +129,12 @@ def mock_workflow_w_api():
             },
             {
                 "children": [],
-                "decision_options": [],
                 "depends": 1,
                 "depends_on": [],
                 "id": "ffffffff-2bd2-11ed-b25b-ab922a707b03",
                 "node": {
                     "base": "finish",
-                    "config": '""',
+                    "config": {},
                     "id": "ffffffff-2bd2-11ed-b25b-ab922a707b03",
                     "name": "finish",
                     "type": "flow",
@@ -148,6 +142,115 @@ def mock_workflow_w_api():
                 },
                 "parents": [
                     {"id": "550f616e-36a6-11ed-a892-abe733d6e265"},
+                ],
+                "required_state": [],
+                "state": "blocked",
+            },
+        ],
+    }
+
+
+@pytest.fixture
+def mock_workflow_w_decision():
+    return {
+        "template": True,
+        "template_active": True,
+        "id": "550ef5da-36a6-11ed-a892-bb8818cce9dc",
+        "state": "waiting",
+        "flowstate": {
+            "state": {"greeting_name": "Tom", "temperature": 72},
+            "created": "2022-09-17T16:32:33.786748+00:00",
+            "last_updated": "2022-09-17T16:32:33.786751+00:00",
+        },
+        "node_instances": [
+            {
+                "children": [
+                    {"id": "550fdce8-36a6-11ed-a892-3369233e6ccb"},
+                    {"id": "550fa37c-36a6-11ed-a892-e3bf2af53985"},
+                ],
+                "depends": 0,
+                "depends_on": [],
+                "id": "550f616e-36a6-11ed-a892-abe733d6e265",
+                "node": {
+                    "base": "decision",
+                    "config": {
+                        "decision": {
+                            "choices": {True: 1, False: 0},
+                            "rules": [
+                                {
+                                    "op": "eq",
+                                    "operand_1": "{{state.temperature}}",
+                                    "operand_2": 72,
+                                    "operand_types": "int",
+                                },
+                            ],
+                            "strategy": "any",
+                        }
+                    },
+                    "id": "9a465bea-2bd2-11ed-b25b-ab922a707b03",
+                    "name": "decision",
+                    "type": "decision",
+                    "version": 1,
+                },
+                "parents": [],
+                "required_state": ["temperature"],
+                "state": "waiting",
+            },
+            {
+                "children": [{"id": "ffffffff-2bd2-11ed-b25b-ab922a707b03"}],
+                "depends": 1,
+                "depends_on": [],
+                "id": "550fdce8-36a6-11ed-a892-3369233e6ccb",
+                "sequence": 1,
+                "node": {
+                    "base": "action",
+                    "config": '{"debug_id": "550fdce8-36a6-11ed-a892-3369233e6ccb"}',
+                    "id": "9a465bea-2bd2-11ed-b25b-ab922a707b03",
+                    "name": "hello_world",
+                    "type": "api",
+                    "version": 1,
+                },
+                "parents": [{"id": "550f616e-36a6-11ed-a892-abe733d6e265"}],
+                "required_state": ["greeting_name"],
+                "state": "blocked",
+            },
+            {
+                "children": [{"id": "ffffffff-2bd2-11ed-b25b-ab922a707b03"}],
+                "depends": -1,
+                "depends_on": [],
+                "id": "550fa37c-36a6-11ed-a892-e3bf2af53985",
+                "sequence": 0,
+                "node": {
+                    "base": "action",
+                    "config": '{"debug_id": "550fa37c-36a6-11ed-a892-e3bf2af53985"}',
+                    "id": "9a465bea-2bd2-11ed-b25b-ab922a707b03",
+                    "name": "hello_world",
+                    "type": "api",
+                    "version": 1,
+                },
+                "parents": [{"id": "550f616e-36a6-11ed-a892-abe733d6e265"}],
+                "required_state": ["greeting_name"],
+                "state": "blocked",
+            },
+            {
+                "children": [],
+                "depends": 2,
+                "depends_on": [
+                    {"id": "550f616e-36a6-11ed-a892-abe733d6e265"},
+                    {"id": "550fdce8-36a6-11ed-a892-3369233e6ccb"},
+                ],
+                "id": "ffffffff-2bd2-11ed-b25b-ab922a707b03",
+                "node": {
+                    "base": "finish",
+                    "config": {},
+                    "id": "ffffffff-2bd2-11ed-b25b-ab922a707b03",
+                    "name": "finish",
+                    "type": "flow",
+                    "version": 1,
+                },
+                "parents": [
+                    {"id": "550f616e-36a6-11ed-a892-abe733d6e265"},
+                    {"id": "550fdce8-36a6-11ed-a892-3369233e6ccb"},
                 ],
                 "required_state": [],
                 "state": "blocked",
@@ -170,3 +273,46 @@ async def test_execute_wf_with_real_api_node(mock_workflow_w_api, httpx_mock):
 
     assert mock_workflow_w_api["state"] == "completed"
     assert mock_workflow_w_api["flowstate"]["state"]["httpbin_post_response_url"] == url
+
+
+async def test_execute_wf_with_decision_node(mock_workflow_w_decision):
+    elect_id = "550fdce8-36a6-11ed-a892-3369233e6ccb"
+    not_my_people_id = "550fa37c-36a6-11ed-a892-e3bf2af53985"
+
+    await process.execute_wf(mock_workflow_w_decision)
+
+    elect = {}
+    not_my_people = {}
+    for ni in mock_workflow_w_decision["node_instances"]:
+        if elect and not_my_people:
+            break
+        if ni["id"] == elect_id:
+            elect = ni
+        if ni["id"] == not_my_people_id:
+            not_my_people = ni
+    assert elect["state"] == "completed"
+    assert not_my_people["state"] == "cancelled"
+
+
+def test__cancel_children():
+    children = [
+        {"sequence": 0, "state": "waiting"},
+        {"sequence": 1, "state": "blocked"},
+        {"sequence": 2, "state": "waiting"},
+    ]
+    expected = children.copy()
+    expected[2]["state"] = "cancelled"
+
+    res = process._cancel_children(2, children)
+    assert res == expected
+
+
+def test__find_children():
+    ni = [{"id": "1"}, {"id": "2"}, {"id": "3"}]
+    ids = ({"id": "1"}, {"id": "3"})
+
+    res = process._find_children(ni, ids)
+
+    assert len(res) == 2
+    assert res[0]["id"] == "1"
+    assert res[1]["id"] == "3"

@@ -5,9 +5,7 @@ from edgedb import AsyncIOClient
 from ..db import inject_client
 from ..lib import edge
 
-_node_instance_attributes_query = (
-    """node, state, workflow :{ id }, decision_options, required_state"""
-)
+_node_instance_attributes_query = """node, state, workflow :{ id }, required_state"""
 _node_attributes_query = """name, version, template, base, type, config"""
 
 
@@ -44,9 +42,8 @@ async def add_instance(
 
 async def update_node_instance_relationships(
     instance_id: str,
-    parents: list[str],
+    parents: list[dict[str, str]],
     depends_on: list[str],
-    decision_options: list[str],
     tx,
 ):
     for parent in parents:
@@ -77,17 +74,6 @@ async def update_node_instance_relationships(
             instance_id=instance_id,
             dep=dep,
         )
-    await tx.query(
-        """
-            update NodeInstance
-                filter .id = <uuid>$instance_id
-                set {
-                    decision_options := <array<uuid>>$decision_options
-                }
-        """,
-        instance_id=instance_id,
-        decision_options=decision_options,
-    )
 
 
 @inject_client

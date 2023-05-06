@@ -17,19 +17,16 @@ async def create_node_instance(node_instance, tx):
 node_instances = [
     {
         "id": "1",
-        "decision_options": ["2", "3"],
         "depends_on": [],
         "parents": [],
     },
     {
         "id": "2",
-        "decision_options": ["3"],
         "depends_on": [{"id": "1"}],
         "parents": [{"id": "1"}],
     },
     {
         "id": "3",
-        "decision_options": [],
         "depends_on": [{"id": "1"}, {"id": "2"}],
         "parents": [{"id": "1"}, {"id": "2"}],
     },
@@ -49,13 +46,10 @@ async def test_create_instance_replaces_ids():
     )
 
     assert calls[0]["id"] == "1p"
-    assert calls[0]["decision_options"] == ["2p", "3p"]
     assert not calls[0]["depends_on"]
 
     assert calls[1]["id"] == "2p"
-    assert calls[1]["decision_options"] == ["3p"]
     assert calls[1]["depends_on"] == [{"id": "1p"}]
 
     assert calls[2]["id"] == "3p"
-    assert calls[2]["decision_options"] == []
     assert calls[2]["depends_on"] == [{"id": "1p"}, {"id": "2p"}]
