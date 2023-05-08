@@ -30,7 +30,8 @@ module default {
         required property state -> str {
             constraint one_of (
                 'started', 'cancelled', 'completed',
-                'error', 'waiting', 'blocked'
+                'error', 'waiting', 'blocked',
+                'polling', 'pending'
             )
         };
         property config -> json;

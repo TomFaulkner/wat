@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from enum import Enum
 from typing import Any
 from uuid import UUID
 
@@ -16,16 +15,6 @@ from ..svc import workflow
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-# not currently used, delete?
-class States(str, Enum):
-    started: "started"
-    cancelled: "cancelled"
-    completed: "completed"
-    error: "error"
-    waiting: "waiting"
-    template: "template"
 
 
 class FlowState(BaseModel):

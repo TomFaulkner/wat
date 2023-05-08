@@ -50,7 +50,7 @@ def _cancel_children(elect: int, children: list[dict]):
 async def _execute_wf(wf) -> bool:
     node_ran = False
     for instance in wf["node_instances"]:
-        if instance["state"] == "waiting" and _check_required_state(
+        if instance["state"] == "pending" and _check_required_state(
             instance, wf["flowstate"]["state"]
         ):
             logger.debug("Executing %s", instance["id"])
@@ -119,7 +119,7 @@ async def _execute_wf(wf) -> bool:
 
 
 def _has_available_instance(node_instances):
-    return any(ni for ni in node_instances if ni["state"] in ("waiting", "blocked"))
+    return any(ni for ni in node_instances if ni["state"] in ("pending", "blocked"))
 
 
 def blocked_node_can_run(node, parents, parent_ids, wf_state) -> bool:
@@ -165,7 +165,7 @@ async def execute_wf(workflow) -> bool:
         if not ran_at_least_one:
             ran_at_least_one = node_ran
 
-        # TODO: move this to its own function, try_update_to_waiting_state or similar
+        # TODO: move this to its own function, try_update_to_pending_state or similar
         for ni in workflow["node_instances"]:
             logger.debug("Examining NI %s", ni["id"])
             if ni["state"] != "blocked":
@@ -176,7 +176,7 @@ async def execute_wf(workflow) -> bool:
             if blocked_node_can_run(
                 ni, parents, parent_ids, workflow["flowstate"]["state"]
             ):
-                ni["state"] = "waiting"
+                ni["state"] = "pending"
 
     logger.debug("Ending execute_wf: %s", pformat(workflow))
     return ran_at_least_one

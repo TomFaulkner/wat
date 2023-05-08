@@ -34,7 +34,7 @@ def mock_workflow():
                 },
                 "parents": [],
                 "required_state": ["greeting_name"],
-                "state": "waiting",
+                "state": "pending",
             },
             {
                 "children": [{"id": "ffffffff-2bd2-11ed-b25b-ab922a707b03"}],
@@ -125,7 +125,7 @@ def mock_workflow_w_api():
                 },
                 "parents": [],
                 "required_state": [],
-                "state": "waiting",
+                "state": "pending",
             },
             {
                 "children": [],
@@ -194,7 +194,7 @@ def mock_workflow_w_decision():
                 },
                 "parents": [],
                 "required_state": ["temperature"],
-                "state": "waiting",
+                "state": "pending",
             },
             {
                 "children": [{"id": "ffffffff-2bd2-11ed-b25b-ab922a707b03"}],
@@ -296,9 +296,9 @@ async def test_execute_wf_with_decision_node(mock_workflow_w_decision):
 
 def test__cancel_children():
     children = [
-        {"sequence": 0, "state": "waiting"},
+        {"sequence": 0, "state": "pending"},
         {"sequence": 1, "state": "blocked"},
-        {"sequence": 2, "state": "waiting"},
+        {"sequence": 2, "state": "pending"},
     ]
     expected = children.copy()
     expected[2]["state"] = "cancelled"
