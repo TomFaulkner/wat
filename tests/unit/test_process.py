@@ -259,6 +259,64 @@ def mock_workflow_w_decision():
     }
 
 
+@pytest.fixture
+def mock_workflow_w_polling():
+    return {
+        "template": True,
+        "template_active": True,
+        "id": "550ef5da-36a6-11ed-a892-bb8818cce9dc",
+        "state": "waiting",
+        "flowstate": {
+            "state": {
+                "550f616e-36a6-11ed-a892-abe733d6e265": {
+                    "obj_id": "another-uuid",
+                    "poll_count": 0,
+                }
+            },
+            "created": "2022-09-17T16:32:33.786748+00:00",
+            "last_updated": "2022-09-17T16:32:33.786751+00:00",
+        },
+        "node_instances": [
+            {
+                "children": [],
+                "depends": 0,
+                "depends_on": [],
+                "id": "550f616e-36a6-11ed-a892-abe733d6e265",
+                "node": {
+                    "base": "action",
+                    "config": {},
+                    "id": "9a465bea-2bd2-11ed-b25b-ab922a707b03",
+                    "name": "example_api_send_and_poll",
+                    "type": "api",
+                    "version": 1,
+                },
+                "parents": [],
+                "required_state": [],
+                "state": "polling",
+            },
+            {
+                "children": [],
+                "depends": 1,
+                "depends_on": [],
+                "id": "ffffffff-2bd2-11ed-b25b-ab922a707b03",
+                "node": {
+                    "base": "finish",
+                    "config": {},
+                    "id": "ffffffff-2bd2-11ed-b25b-ab922a707b03",
+                    "name": "finish",
+                    "type": "flow",
+                    "version": 1,
+                },
+                "parents": [
+                    {"id": "550f616e-36a6-11ed-a892-abe733d6e265"},
+                ],
+                "required_state": [],
+                "state": "blocked",
+            },
+        ],
+    }
+
+
 async def test_execute_wf(mock_workflow):
     await process.execute_wf(mock_workflow)
 
@@ -273,6 +331,14 @@ async def test_execute_wf_with_real_api_node(mock_workflow_w_api, httpx_mock):
 
     assert mock_workflow_w_api["state"] == "completed"
     assert mock_workflow_w_api["flowstate"]["state"]["httpbin_post_response_url"] == url
+
+
+async def test_execute_wf_w_polling(mock_workflow_w_polling, httpx_mock):
+    httpx_mock.add_response(json={"complete": True})
+
+    await process.execute_wf(mock_workflow_w_polling)
+
+    assert mock_workflow_w_polling["state"] == "completed"
 
 
 async def test_execute_wf_with_decision_node(mock_workflow_w_decision):

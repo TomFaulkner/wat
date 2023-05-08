@@ -57,10 +57,10 @@ def _cancel_children(elect: int, children: list[dict]):
     return children
 
 
-async def _execute_wf(wf) -> bool:
-    node_ran = False
+async def _execute_wf(wf) -> bool:  # one or more nodes completed
+    node_completed = False
     for instance in wf["node_instances"]:
-        if instance["state"] == "pending" and _check_required_state(
+        if instance["state"] in ("pending", "polling") and _check_required_state(
             instance, wf["flowstate"]["state"]
         ):
             logger.debug("Executing %s", instance["id"])
@@ -87,7 +87,8 @@ async def _execute_wf(wf) -> bool:
                     # TODO: include this in the decorator
                     wf["flowstate"]["state"].update(state_update)
                     instance["state"] = status
-                    node_ran = True
+                    if status == "completed":
+                        node_completed = True
 
                 case "decision":
                     module_name = (
@@ -104,7 +105,7 @@ async def _execute_wf(wf) -> bool:
 
                         wf["flowstate"]["state"].update(state_update)
                         instance["state"] = "completed"
-                        node_ran = True
+                        node_completed = True
                     except Exception:
                         instance["state"] = "error"
                         logger.exception(
@@ -125,11 +126,13 @@ async def _execute_wf(wf) -> bool:
                     wf["state"] = "completed"
                     logger.info("Finished workflow. %s", wf["id"])
 
-    return node_ran
+    return node_completed
 
 
 def _has_available_instance(node_instances):
-    return any(ni for ni in node_instances if ni["state"] in ("pending", "blocked"))
+    return any(
+        ni for ni in node_instances if ni["state"] in ("pending", "blocked", "polling")
+    )
 
 
 def blocked_node_can_run(node, parents, parent_ids, wf_state) -> bool:
@@ -161,19 +164,16 @@ def _parent_ids(node):
     return {p["id"] for p in node["parents"]}
 
 
-async def execute_wf(workflow) -> bool:
+async def execute_wf(workflow) -> dict:
     logger.debug("Executing wf:%s ::: %s", workflow["id"], workflow)
 
-    node_ran = True
+    node_completed = True
 
-    ran_at_least_one = False
-    while node_ran and _has_available_instance(workflow["node_instances"]):
-        node_ran = await _execute_wf(workflow)
+    while node_completed and _has_available_instance(workflow["node_instances"]):
+        node_completed = await _execute_wf(workflow)
         logger.debug(
             "Node states: %s", [ni["state"] for ni in workflow["node_instances"]]
         )
-        if not ran_at_least_one:
-            ran_at_least_one = node_ran
 
         # TODO: move this to its own function, try_update_to_pending_state or similar
         for ni in workflow["node_instances"]:
@@ -189,4 +189,4 @@ async def execute_wf(workflow) -> bool:
                 ni["state"] = "pending"
 
     logger.debug("Ending execute_wf: %s", pformat(workflow))
-    return ran_at_least_one
+    return {}  # TODO: should this return a finish nodes results instead (in TODO notes)
