@@ -65,4 +65,9 @@ def edge_single(c):
     )
 
 
-namespace = Collection(format, edge, test, edge_single)
+@task
+def dummy(c):
+    c.run("./start-dummy.sh", pty=True)
+
+
+namespace = Collection(format, edge, test, edge_single, dummy)
