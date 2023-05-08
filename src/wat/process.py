@@ -11,7 +11,17 @@ async def _execute_action_node(
     node_instance, state, module_name
 ) -> tuple[bool, dict[str, Any]]:
     module = import_module(f"wat.nodes.{module_name}")
-    return await module.execute(node_instance["node"]["config"], state)
+    if node_instance["state"] == "polling":
+        return await module.poll(
+            node_instance["id"],
+            node_instance["node"]["config"],
+            state,
+        )
+    return await module.execute(
+        node_instance["id"],
+        node_instance["node"]["config"],
+        state,
+    )
 
 
 DecisionChoiceNumber = int
@@ -61,8 +71,8 @@ async def _execute_wf(wf) -> bool:
                     )
                     # TODO: move this try/except to a decorator or another function
                     try:
-                        success, state_update = await _execute_action_node(
-                            instance, wf["flowstate"]["state"], module_name
+                        status, state_update = await _execute_action_node(
+                            instance, wf["flowstate"]["state"].copy(), module_name
                         )
                     except Exception:
                         instance["state"] = "error"
@@ -74,10 +84,10 @@ async def _execute_wf(wf) -> bool:
                         )
                         continue
 
-                    if success:  # TODO: include this in the decorator
-                        wf["flowstate"]["state"].update(state_update)
-                        instance["state"] = "completed"
-                        node_ran = True
+                    # TODO: include this in the decorator
+                    wf["flowstate"]["state"].update(state_update)
+                    instance["state"] = status
+                    node_ran = True
 
                 case "decision":
                     module_name = (
@@ -85,7 +95,7 @@ async def _execute_wf(wf) -> bool:
                     )
                     try:  # TODO: see above TODO
                         decision, state_update = await _execute_decision_node(
-                            instance, wf["flowstate"]["state"], module_name
+                            instance, wf["flowstate"]["state"].copy(), module_name
                         )
                         children = _find_children(
                             wf["node_instances"], instance["children"]
