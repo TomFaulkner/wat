@@ -34,6 +34,7 @@ polling_ids = {}
 @app.post("/pollable", status_code=202)
 async def pollable_post(count: int):
     poll_id = uuid4()
+    logger.info("Created pollable with id:%s", poll_id)
     polling_ids[str(poll_id)] = {"polls": 0, "respond_when": count}
     return {"id": poll_id, "polls": 0, "respond_when": count}
 
@@ -56,6 +57,10 @@ async def pollable_get(id_: UUID):
         if polling_ids[str(id_)]["polls"] == polling_ids[str(id_)]["respond_when"]:
             response["complete"] = True
             return response
+        elif polling_ids[str(id_)]["polls"] > polling_ids[str(id_)]["respond_when"]:
+            raise HTTPException(
+                status_code=409, detail=f"Response for id:{id_} was already returned."
+            )
         return response
 
 
