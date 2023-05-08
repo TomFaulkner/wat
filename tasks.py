@@ -8,11 +8,11 @@ def format(c):
     c.run(
         """
         poetry install
-        poetry run ssort src tests
-        poetry run isort -l 88 --up --tc --float-to-top src tests
-        poetry run ruff --fix src tests
-        poetry run black src tests
-        poetry run flake8 src tests
+        poetry run ssort src tests dummy
+        poetry run isort -l 88 --up --tc --float-to-top src tests dummy
+        poetry run ruff --fix src tests dummy
+        poetry run black src tests dummy
+        poetry run flake8 src tests dummy
         """,
         pty=True,
     )
