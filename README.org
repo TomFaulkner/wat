@@ -46,29 +46,44 @@
   - >1: N parents
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
-** ToDo
-- [ ] Decision Node
-- [ ] Fix node instances need sequence number, workflows need name/version
-- [ ] Math Decision Node processing (nodes.decision NotImplementedError)
-- [ ] Workflows mark themselves complete
-- [ ] Validation on Attributes
-- [ ] cleanup tx/client issues
-- [ ] use generated queries
-- [ ] celery or other to actually run the workflows
-- [ ] system to do inserts for db start state (required attributes and such)
-- [ ] system to populate db for tests
-- [ ] api node needs to validate whatever it wants to store into flowstate. is this the same as validation on attributes now?
-- [ ] dynamic validation system for api node to flowstate
-- [ ] interactive node
-- [ ] lanes and a way to id users (trusts?)
-- [ ] functional tests
-- [ ] contract testing
-- [ ] GUI to configure/build
-- [ ] GUI Dashboard
-- [ ] CLI?
-- [ ] workflow starting other workflows
+** ToDo [6/6]
+- Important [0/9]
+  - [ ] Celery or other to actually run the workflows
+  - [ ] interactive node
+  - [ ] Ingestion friendly name table/path (see notes above)
+    - Notes above mention a start node ingest, but /car already takes a json body for start state.
+      - Takes query param for wf_id and body with "start" key
+  - [ ] lanes and a way to id users (trusts?)
+  - [ ] Polling
+    - [ ] Self for state to continue a workflow
+    - [ ] API to check for desired response to continue (maybe including fetching the results)
+  - [ ] Callbacks
+    - How does a node wait for a callback? Wait for state?
+  - [ ] GUI to configure/build
+    - [ ] Shows required states for all node instances and allows selecting which to add to wf start attribs
+  - [ ] GUI Dashboard
+  - [ ] workflow starting other workflows [0/2]
+    - [ ] check workflow and node status endpoints / svc functions
+    - [ ] workflows should return configured state to parent workflow / API caller
+- Fixes [0/4]
+  - [ ] cleanup tx/client issues
+  - [ ] use generated queries
+  - [ ] Fix node instances need sequence number, workflows need name/version
+  - [ ] Workflows mark themselves complete
+- Nice to Have [0/5]
+  - [ ] Math Decision Node processing (nodes.decision NotImplementedError)
+  - [ ] Validation on Attributes
+  - [ ] api node needs to validate whatever it wants to store into flowstate. is this the same as validation on attributes now?
+  - [ ] dynamic validation system for api node to flowstate
+  - [ ] CLI?
+- Dev Only [0/4]
+  - [ ] system to do inserts for db start state (required attributes and such)
+  - [ ] system to populate db for tests
+  - [ ] functional tests
+  - [ ] contract testing
 - [X] saving state and changes
 - [X] Try individual query files and/or directories (edgedb-py doesn't innately do different directories)
 - [X] Validation on Start Requirements
 - [X] start node needs to take validated inputs to enter into flowstate (workflow does this instead)
 - [X] fastapi endpoint for starting workflow should take a dict of state for start
+- [X] Decision Node
