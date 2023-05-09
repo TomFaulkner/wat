@@ -35,8 +35,11 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
 
     ids = {}
     for ni in node_instances:
+        logger.debug("Start ni: %s", ni)
         stripped_ni = _strip_ni(ni)
+        logger.debug("Stripped ni: %s", stripped_ni)
         new_node = await create_node(stripped_ni, tx=tx)
+        logger.debug("New NI: %s", new_node)
         ids[ni["id"]] = new_node["id"]
 
     for ni in node_instances:
@@ -60,6 +63,7 @@ async def _adapter_upd_ni_rels(ni, tx):
 
 async def create_instance(wf_id: str, tx) -> dict[str, Any]:
     wf = await workflows.get_active_template_by_id(wf_id, client=tx)
+    logger.debug("Fetched WF template: %s", wf)
     wf = _strip_wf(wf.copy())
     node_instances = wf.pop("node_instances")
     start_requirements = wf.pop("start_requirements")
@@ -118,6 +122,7 @@ async def create_and_run(tx, wf_id: str, start: dict[str, Any] | None = None):
     This should be the main way workflows are started."""
 
     wf = await create_instance(wf_id, tx=tx)
+    logger.debug("Created WF: %s", wf)
     start_attrs = {}
     if wf["start_requirements"]:
         start_attrs = _validate_start_requirements(
@@ -162,3 +167,10 @@ async def update_flow_state(wf_id: str, new_state: dict, tx) -> dict:
         res["state"],
     )
     return res
+
+
+async def callback(ni_id: str, body: dict, tx):
+    ni = await node.get_node_instance_parent_workflow(ni_id, tx)
+    logger.debug("Callback body: %s", body)
+    wf = await workflows.get_by_id(ni.workflow.id)
+    return await process.handle_callback(wf, ni_id, body)

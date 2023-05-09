@@ -1,27 +1,58 @@
+import json
 import logging
 from collections.abc import Sequence
 from importlib import import_module
 from pprint import pformat
 from typing import Any
 
+from pydantic import BaseModel
+
+from wat.lib import pyd
+
 logger = logging.getLogger(__name__)
 
 
+class ProcessingException(Exception):
+    pass
+
+
+class NodeInstanceInInvalidState(ProcessingException):
+    def __init__(self, state):
+        super().__init__(f"Node Instance is an unhandled/invalid state: {state}")
+
+
 async def _execute_action_node(
-    node_instance, state, module_name
-) -> tuple[bool, dict[str, Any]]:
-    module = import_module(f"wat.nodes.{module_name}")
-    if node_instance["state"] == "polling":
-        return await module.poll(
-            node_instance["id"],
-            node_instance["node"]["config"],
-            state,
-        )
-    return await module.execute(
+    node_instance, state, module_name, cb_data: dict | None = None
+) -> tuple[str, dict[str, Any]]:
+    logger.debug(
+        "Executing action node: %s (%s) | %s",
         node_instance["id"],
-        node_instance["node"]["config"],
+        node_instance["state"],
         state,
     )
+    module = import_module(f"wat.nodes.{module_name}")
+    match node_instance["state"]:
+        case "pending":
+            return await module.execute(
+                node_instance["id"],
+                node_instance["node"]["config"],
+                state,
+            )
+        case "polling":
+            return await module.poll(
+                node_instance["id"],
+                node_instance["node"]["config"],
+                state,
+            )
+        case "waiting":
+            return await module.callback(
+                node_instance["id"],
+                node_instance["node"]["config"],
+                state,
+                cb_data,
+            )
+        case _:
+            raise ValueError(node_instance["state"])
 
 
 DecisionChoiceNumber = int
@@ -73,6 +104,11 @@ async def _execute_wf(wf) -> bool:  # one or more nodes completed
                     try:
                         status, state_update = await _execute_action_node(
                             instance, wf["flowstate"]["state"].copy(), module_name
+                        )
+                        logger.debug(
+                            "_execute_action_node results: %s | %s",
+                            status,
+                            state_update,
                         )
                     except Exception:
                         instance["state"] = "error"
@@ -190,3 +226,40 @@ async def execute_wf(workflow) -> dict:
 
     logger.debug("Ending execute_wf: %s", pformat(workflow))
     return {}  # TODO: should this return a finish nodes results instead (in TODO notes)
+
+
+def _find_node(n_instances, ni_id: str) -> dict:
+    return [ni for ni in n_instances if ni["id"] == ni_id][0]
+
+
+def _validate_cb_data(model_config, body) -> BaseModel:
+    return pyd.create_model_from_dict("CBData", model_config)(**body)
+
+
+async def handle_callback(workflow, ni_id: str, body: dict):
+    # TODO: validate and parse using a pydantic model stored in ni config
+    ni = _find_node(workflow["node_instances"], ni_id)
+    if ni["state"] != "waiting":
+        raise NodeInstanceInInvalidState(ni["state"])
+
+    config = json.loads(ni["config"])
+    body = _validate_cb_data(config["model"], body).dict()
+
+    status, state_updates = await _execute_action_node(
+        ni,
+        workflow["flowstate"]["state"],
+        f"{ni['node']['name']}_v{ni['node']['version']}",
+        body,
+    )
+    # TODO: update things
+
+    # callback notes
+    # TODO Next: it seems like ni configs aren't being copied
+    # TODO: waiting status doesn't block children
+    # 2. needs env variable to know hostname/port for the service itself,
+    # and later for the worker(s)
+    # wf: 550ef5da-36a6-11ed-a892-bb8818cce9dc
+    # 3. the env variable has to make it into the API call portion somehow
+    #   - maybe add `server` or something with system config
+    #   - or do i assume remote systems already have a callback path setup,
+    #   because that would be reasonable?

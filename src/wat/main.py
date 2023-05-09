@@ -7,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .db import create_pool
 
-logging.basicConfig(level=settings.log_level)
+logging.basicConfig(
+    format="%(levelname)s: %(module)s:%(lineno)d: %(message)s", level=settings.log_level
+)
 logger = logging.getLogger(__name__)
 
 

@@ -17,7 +17,7 @@ _workflow_attributes_query = """
     state,
     flowstate :{ state, created, last_updated },
     start_requirements :{ name, type, default_value },
-    node_instances :{ state, parents, children, sequence, depends, depends_on, required_state, node :{ name, version, config, base, type } },
+    node_instances :{ state, parents, children, sequence, depends, depends_on, required_state, config, node :{ name, version, config, base, type }, workflow },
 """  # noqa: E501 line too long
 
 _flowstate_attributes_query = "id, state, created, last_updated"

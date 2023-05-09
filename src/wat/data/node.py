@@ -23,7 +23,8 @@ async def add_instance(
                 workflow := ( select Workflow filter .id = <uuid>$workflow ),
                 depends := <int16>$depends,
                 required_state := <array<str>>$required_state,
-                sequence := <int16>$sequence
+                sequence := <int16>$sequence,
+                config := <json>$config
             }
         )
         select new_instance { %s }
@@ -35,6 +36,7 @@ async def add_instance(
         depends=node_instance["depends"],
         required_state=node_instance["required_state"] or [],
         sequence=node_instance.get("sequence", 0),
+        config=node_instance["config"] or "{}",
     )
     result = edge.obj_to_dict(res[0])
     return result
@@ -74,6 +76,17 @@ async def update_node_instance_relationships(
             instance_id=instance_id,
             dep=dep,
         )
+
+
+async def get_node_instance_parent_workflow(ni_id: str, tx):
+    return await tx.query_single(
+        """
+        select NodeInstance
+            { id, workflow :{ id } }
+            filter .id = <uuid>$ni_id
+        """,
+        ni_id=ni_id,
+    )
 
 
 @inject_client

@@ -33,6 +33,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.plugins."wat.modules"]
 # when making changes to this you must rerun poetry install
 "attribs" = "wat.views.attribs"
+"callback" = "wat.views.callback"
 "manual_exec" = "wat.views.manual_exec"
 "version" = "wat.views.version"
 "workflows" = "wat.views.workflows"
