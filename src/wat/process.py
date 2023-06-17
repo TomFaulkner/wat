@@ -199,9 +199,10 @@ async def execute_wf(workflow) -> dict:
 
     while node_completed and _has_available_instance(workflow["node_instances"]):
         node_completed = await _execute_wf(workflow)
-        logger.debug(
-            "Node states: %s", [ni["state"] for ni in workflow["node_instances"]]
-        )
+        if __debug__:
+            logger.debug(
+                "Node states: %s", [ni["state"] for ni in workflow["node_instances"]]
+            )
 
         # TODO: move this to its own function, try_update_to_pending_state or similar
         for ni in workflow["node_instances"]:
@@ -240,16 +241,16 @@ async def handle_callback(workflow, ni_id: str, body: dict):
     config = json.loads(ni["config"])
     body = _validate_cb_data(config["model"], body).dict()
 
-    status, state_updates = await _execute_action_node(
+    status, state_update = await _execute_action_node(
         ni,
         workflow["flowstate"]["state"],
         f"{ni['node']['name']}_v{ni['node']['version']}",
         body,
     )
-    # TODO: update things
+    workflow["flowstate"]["state"].update(state_update)
+    ni["state"] = status
 
     # callback notes
-    # TODO Next: it seems like ni configs aren't being copied
     # TODO: waiting status doesn't block children
     # 2. needs env variable to know hostname/port for the service itself,
     # and later for the worker(s)

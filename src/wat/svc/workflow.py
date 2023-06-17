@@ -182,7 +182,17 @@ async def callback(ni_id: str, body: dict, tx):
     ni = await node.get_node_instance_parent_workflow(ni_id, tx)
     logger.debug("Callback body: %s", body)
     wf = await workflows.get_by_id(ni.workflow.id)
-    return await process.handle_callback(wf, ni_id, body)
+
+    await process.handle_callback(wf, ni_id, body)
+
+    await workflows.update_flow_state(
+        wf["flowstate"]["id"], wf["flowstate"]["state"], tx
+    )
+    await workflows.update_state(wf["id"], wf["state"], tx)
+    for ni in wf["node_instances"]:
+        await node.update_instance_state(ni["id"], ni["state"], client=tx)
+
+    # TODO: this should probably re-enqueue the workflow if things remain to be done
 
 
 async def enqueue_wf(wf_id: str) -> None:
