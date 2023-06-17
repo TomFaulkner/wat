@@ -254,11 +254,5 @@ async def handle_callback(workflow, ni_id: str, body: dict):
     ni["state"] = status
 
     # callback notes
-    # TODO: waiting status doesn't block children
-    # 2. needs env variable to know hostname/port for the service itself,
-    # and later for the worker(s)
+    # TODO: waiting status doesn't block children, not sure if this is still a problem
     # wf: 550ef5da-36a6-11ed-a892-bb8818cce9dc
-    # 3. the env variable has to make it into the API call portion somehow
-    #   - maybe add `server` or something with system config
-    #   - or do i assume remote systems already have a callback path setup,
-    #   because that would be reasonable?
