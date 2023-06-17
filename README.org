@@ -59,6 +59,7 @@
   - [ ] Callbacks
     - How does a node wait for a callback? Set state to =waiting=
     - Poll state to continue a workflow? or Does the callback handler set this and execute wf again? (this seems to make more sense)
+      - [ ] Parse the cb data using a model stored in NI config
   - [ ] GUI to configure/build
     - [ ] Shows required states for all node instances and allows selecting which to add to wf start attribs
   - [ ] GUI Dashboard
