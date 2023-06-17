@@ -1,4 +1,4 @@
-site_hostname = "http://localhost:8001"
+site_hostname = "http://localhost:8000"
 
 db_user = "user"
 db_password = "password"

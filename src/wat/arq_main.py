@@ -18,8 +18,13 @@ async def download_content(ctx, url):
 
 async def startup(ctx):
     logging.basicConfig(
-        format="%(levelname)s: %(module)s:%(lineno)d: %(message)s", level=logging.DEBUG
+        format="%(levelname)s: %(module)s:%(lineno)d: %(message)s",
+        level=logging.DEBUG,
     )
+
+    # mute the arq watchfiles reload monitor
+    logging.getLogger("watchfiles").setLevel(logging.ERROR)
+
     ctx["session"] = AsyncClient()
     ctx["edge_client"] = create_async_client()
 

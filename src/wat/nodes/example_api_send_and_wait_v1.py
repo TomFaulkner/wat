@@ -3,9 +3,11 @@ from typing import Any
 
 import httpx
 
+from wat.config import settings
+
 logger = logging.getLogger(__name__)
 
-url = "http://127.0.0.1:8001/callback"
+url = f"{settings.site_hostname}/callback"
 
 
 class APISendingException(ValueError):
@@ -17,7 +19,7 @@ async def execute(id_: str, config: dict[str, str], state: dict[str, Any]):
         r = await client.post(
             f"{url}",
             json={
-                "url": f"http://127.0.0.1:8000/cb/{id_}",
+                "url": f"{url}/cb/{id_}",
                 "body": {"snack": "ice cream"},
             },
         )
