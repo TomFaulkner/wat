@@ -382,3 +382,89 @@ def test__find_children():
     assert len(res) == 2
     assert res[0]["id"] == "1"
     assert res[1]["id"] == "3"
+
+
+def test_blocked_node_can_run_depends_true():
+    parents = [
+        {"state": "completed", "id": "c0"},
+        {"state": "waiting", "id": "w1"},
+        {"state": "pending", "id": "p2"},
+    ]
+    node = {"id": "node", "depends": 1, "depends_on": [], "required_state": []}
+
+    assert process.blocked_node_can_run(node, parents, ["c0", "w1", "p2"], {})
+
+
+def test_blocked_node_can_run_depends_false():
+    parents = [
+        {"state": "completed", "id": "c0"},
+        {"state": "waiting", "id": "w1"},
+        {"state": "pending", "id": "p2"},
+    ]
+    node = {"id": "node", "depends": 2, "depends_on": [], "required_state": []}
+
+    assert process.blocked_node_can_run(node, parents, ["c0", "w1", "p2"], {}) is False
+
+
+def test_blocked_node_can_run_depends_on_true():
+    parents = [
+        {"state": "completed", "id": "c0"},
+        {"state": "waiting", "id": "w1"},
+        {"state": "pending", "id": "p2"},
+    ]
+    node = {
+        "id": "node",
+        "depends": 1,
+        "depends_on": [parents[0]],
+        "required_state": [],
+    }
+
+    assert process.blocked_node_can_run(node, parents, ["c0", "w1", "p2"], {})
+
+
+def test_blocked_node_can_run_depends_on_false_waiting():
+    parents = [
+        {"state": "completed", "id": "c0"},
+        {"state": "waiting", "id": "w1"},
+        {"state": "pending", "id": "p2"},
+    ]
+    node = {
+        "id": "node",
+        "depends": 0,
+        "depends_on": [parents[1]],
+        "required_state": [],
+    }
+
+    assert process.blocked_node_can_run(node, parents, ["c0", "w1", "p2"], {}) is False
+
+
+def test_blocked_node_can_run_depends_on_false_pending():
+    parents = [
+        {"state": "completed", "id": "c0"},
+        {"state": "waiting", "id": "w1"},
+        {"state": "pending", "id": "p2"},
+    ]
+    node = {
+        "id": "node",
+        "depends": 0,
+        "depends_on": [parents[2]],
+        "required_state": [],
+    }
+
+    assert process.blocked_node_can_run(node, parents, ["c0", "w1", "p2"], {}) is False
+
+
+def test_blocked_node_can_run_depends_on_false_pending_with_another():
+    parents = [
+        {"state": "completed", "id": "c0"},
+        {"state": "waiting", "id": "w1"},
+        {"state": "pending", "id": "p2"},
+    ]
+    node = {
+        "id": "node",
+        "depends": 0,
+        "depends_on": [parents[0], parents[2]],
+        "required_state": [],
+    }
+
+    assert process.blocked_node_can_run(node, parents, ["c0", "w1", "p2"], {}) is False

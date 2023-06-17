@@ -83,76 +83,79 @@ def _cancel_children(elect: int, children: list[dict]):
 async def _execute_wf(wf) -> bool:  # one or more nodes completed
     node_completed = False
     for instance in wf["node_instances"]:
-        if instance["state"] in ("pending", "polling") and _check_required_state(
+        if instance["state"] not in ("pending", "polling") or _check_required_state(
             instance, wf["flowstate"]["state"]
         ):
-            logger.debug("Executing %s", instance["id"])
-            match instance["node"]["base"]:
-                case "action":
-                    module_name = (
-                        f"{instance['node']['name']}_v{instance['node']['version']}"
-                    )
-                    # TODO: move this try/except to a decorator or another function
-                    try:
-                        status, state_update = await _execute_action_node(
-                            instance, wf["flowstate"]["state"].copy(), module_name
-                        )
-                        logger.debug(
-                            "_execute_action_node results: %s | %s",
-                            status,
-                            state_update,
-                        )
-                    except Exception:
-                        instance["state"] = "error"
-                        logger.exception(
-                            "Workflow (%s:%s) failed to run %s",
-                            wf["id"],
-                            instance["id"],
-                            module_name,
-                        )
-                        continue
+            continue
 
-                    # TODO: include this in the decorator
+        logger.debug("Executing %s", instance["id"])
+        match instance["node"]["base"]:
+            case "action":
+                module_name = (
+                    f"{instance['node']['name']}_v{instance['node']['version']}"
+                )
+                # TODO: move this try/except to a decorator or another function
+                try:
+                    status, state_update = await _execute_action_node(
+                        instance, wf["flowstate"]["state"].copy(), module_name
+                    )
+                    logger.debug(
+                        "_execute_action_node results: %s | %s",
+                        status,
+                        state_update,
+                    )
+                except Exception:
+                    instance["state"] = "error"
+                    logger.exception(
+                        "Workflow (%s:%s) failed to run %s",
+                        wf["id"],
+                        instance["id"],
+                        module_name,
+                    )
+                    continue
+
+                # TODO: include this in the decorator
+                wf["flowstate"]["state"].update(state_update)
+                instance["state"] = status
+                if status == "completed":
+                    node_completed = True
+
+            case "decision":
+                module_name = (
+                    f"{instance['node']['name']}_v{instance['node']['version']}"
+                )
+                try:  # TODO: see above TODO
+                    decision, state_update = await _execute_decision_node(
+                        instance, wf["flowstate"]["state"].copy(), module_name
+                    )
+
+                    children = _find_children(
+                        wf["node_instances"], instance["children"]
+                    )
+                    _cancel_children(decision, children)  # mutates children
+
                     wf["flowstate"]["state"].update(state_update)
-                    instance["state"] = status
-                    if status == "completed":
-                        node_completed = True
-
-                case "decision":
-                    module_name = (
-                        f"{instance['node']['name']}_v{instance['node']['version']}"
+                    instance["state"] = "completed"
+                    node_completed = True
+                except Exception:
+                    instance["state"] = "error"
+                    logger.exception(
+                        "Workflow (%s:%s) failed to run %s",
+                        wf["id"],
+                        instance["id"],
+                        module_name,
                     )
-                    try:  # TODO: see above TODO
-                        decision, state_update = await _execute_decision_node(
-                            instance, wf["flowstate"]["state"].copy(), module_name
-                        )
-                        children = _find_children(
-                            wf["node_instances"], instance["children"]
-                        )
-                        _cancel_children(decision, children)  # mutates children
+                    continue
 
-                        wf["flowstate"]["state"].update(state_update)
-                        instance["state"] = "completed"
-                        node_completed = True
-                    except Exception:
-                        instance["state"] = "error"
-                        logger.exception(
-                            "Workflow (%s:%s) failed to run %s",
-                            wf["id"],
-                            instance["id"],
-                            module_name,
-                        )
-                        continue
+            case "start":
+                logger.info("Started workflow. %s", wf["id"])
+                instance["state"] = "completed"
+                wf["state"] = "started"
 
-                case "start":
-                    logger.info("Started workflow. %s", wf["id"])
-                    instance["state"] = "completed"
-                    wf["state"] = "started"
-
-                case "finish":
-                    instance["state"] = "completed"
-                    wf["state"] = "completed"
-                    logger.info("Finished workflow. %s", wf["id"])
+            case "finish":
+                instance["state"] = "completed"
+                wf["state"] = "completed"
+                logger.info("Finished workflow. %s", wf["id"])
 
     return node_completed
 
