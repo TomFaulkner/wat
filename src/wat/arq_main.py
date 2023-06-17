@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from arq import create_pool
 from arq.connections import RedisSettings
@@ -16,6 +17,9 @@ async def download_content(ctx, url):
 
 
 async def startup(ctx):
+    logging.basicConfig(
+        format="%(levelname)s: %(module)s:%(lineno)d: %(message)s", level=logging.DEBUG
+    )
     ctx["session"] = AsyncClient()
     ctx["edge_client"] = create_async_client()
 
@@ -43,6 +47,7 @@ class WorkerSettings:
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings()
+    log_results = True
 
 
 if __name__ == "__main__":

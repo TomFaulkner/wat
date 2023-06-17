@@ -43,3 +43,5 @@ async def poll(
                 "polling",
                 {id_: data_state | {"poll_count": state[f"{id_}"]["poll_count"] + 1}},
             )
+        case _:
+            raise ValueError()

@@ -8,17 +8,9 @@ from typing import Any
 from pydantic import BaseModel
 
 from wat.lib import pyd
+from wat.proc.exc import CallbackNoNodeFound, NodeInstanceInInvalidState
 
 logger = logging.getLogger(__name__)
-
-
-class ProcessingException(Exception):
-    pass
-
-
-class NodeInstanceInInvalidState(ProcessingException):
-    def __init__(self, state):
-        super().__init__(f"Node Instance is an unhandled/invalid state: {state}")
 
 
 async def _execute_action_node(
@@ -34,19 +26,19 @@ async def _execute_action_node(
     match node_instance["state"]:
         case "pending":
             return await module.execute(
-                node_instance["id"],
+                str(node_instance["id"]),
                 node_instance["node"]["config"],
                 state,
             )
         case "polling":
             return await module.poll(
-                node_instance["id"],
+                str(node_instance["id"]),
                 node_instance["node"]["config"],
                 state,
             )
         case "waiting":
             return await module.callback(
-                node_instance["id"],
+                str(node_instance["id"]),
                 node_instance["node"]["config"],
                 state,
                 cb_data,
@@ -229,7 +221,7 @@ async def execute_wf(workflow) -> dict:
 
 
 def _find_node(n_instances, ni_id: str) -> dict:
-    return [ni for ni in n_instances if ni["id"] == ni_id][0]
+    return [ni for ni in n_instances if str(ni["id"]) == ni_id][0]
 
 
 def _validate_cb_data(model_config, body) -> BaseModel:
@@ -238,7 +230,10 @@ def _validate_cb_data(model_config, body) -> BaseModel:
 
 async def handle_callback(workflow, ni_id: str, body: dict):
     # TODO: validate and parse using a pydantic model stored in ni config
-    ni = _find_node(workflow["node_instances"], ni_id)
+    try:
+        ni = _find_node(workflow["node_instances"], ni_id)
+    except IndexError as e:
+        raise CallbackNoNodeFound(ni_id) from e
     if ni["state"] != "waiting":
         raise NodeInstanceInInvalidState(ni["state"])
 
