@@ -47,8 +47,9 @@
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
 ** ToDo [6/6]
-- Important [1/9]
+- Important [1/10]
   - [ ] Celery or other to actually run the workflows
+  - [ ] Worker status viewer
   - [ ] interactive node
   - [ ] Ingestion friendly name table/path (see notes above)
     - Notes above mention a start node ingest, but /car already takes a json body for start state.

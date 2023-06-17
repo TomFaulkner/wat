@@ -120,5 +120,10 @@ async def add_start_requirements(
         await q.workflow_start_requirements_add(tx, id=wf_id, state_ids=attribute_ids)
 
 
+@router.post("/workflows/{wf_id}/enqueu")
+async def enqueue_wf(wf_id: UUID):
+    await workflow.enqueue_wf(str(wf_id))
+
+
 def init_app(app):
     app.include_router(router)

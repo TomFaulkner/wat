@@ -70,4 +70,19 @@ def dummy(c):
     c.run("./start-dummy.sh", pty=True)
 
 
-namespace = Collection(format, edge, test, edge_single, dummy)
+@task
+def dev(c):
+    c.run("./start-dev.sh", pty=True)
+
+
+@task
+def redis(c):
+    c.run("docker compose up", pty=True)
+
+
+@task
+def worker(c):
+    c.run("cd src/wat && poetry run arq arq_main.WorkerSettings --watch .", pty=True)
+
+
+namespace = Collection(format, edge, test, edge_single, dummy, dev, worker)

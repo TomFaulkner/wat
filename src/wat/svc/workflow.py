@@ -100,7 +100,7 @@ def _validate_start_requirements(
     return model(**attributes)
 
 
-async def execute_workflow(wf_id: str, suppress_updates=False, tx=None):
+async def execute_workflow(wf_id: str, suppress_updates=False, tx=None) -> bool:
     wf = await workflows.get_by_id(wf_id, client=tx)
     await process.execute_wf(wf)
 
@@ -114,6 +114,15 @@ async def execute_workflow(wf_id: str, suppress_updates=False, tx=None):
         for ni in wf["node_instances"]:
             await node.update_instance_state(ni["id"], ni["state"], client=tx)
     return True
+
+
+async def start_workflow_arq(ctx, wf_id):
+    async for tx in ctx["edge_client"].transaction():
+        async with tx:
+            start_attrs = {"greeting_name": "greeting_name"}
+            wf = await workflows.get_by_id(wf_id, client=tx)
+            await workflows.update_flow_state(wf["flowstate"]["id"], start_attrs, tx)
+            return await execute_workflow(str(wf_id), tx=tx)
 
 
 async def create_and_run(tx, wf_id: str, start: dict[str, Any] | None = None):
@@ -174,3 +183,10 @@ async def callback(ni_id: str, body: dict, tx):
     logger.debug("Callback body: %s", body)
     wf = await workflows.get_by_id(ni.workflow.id)
     return await process.handle_callback(wf, ni_id, body)
+
+
+async def enqueue_wf(wf_id: str) -> None:
+    from arq import create_pool
+
+    redis = await create_pool()
+    await redis.enqueue_job("start_workflow_arq", wf_id)
