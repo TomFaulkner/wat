@@ -7,7 +7,7 @@ module default {
         required property base -> str {
             constraint one_of (
                 'start', 'finish',
-                'decision', 'action'
+                'decision', 'action', 'interactive'
             )
         };
         property type -> str {
@@ -50,8 +50,6 @@ module default {
 
         required link workflow -> Workflow;
     }
-
-# when a decision is made decision nodeinstance should find its children and cancel those not decided
 
     type Workflow {
         # descriptive only
