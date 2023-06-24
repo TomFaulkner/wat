@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from typing import Sequence
+from collections.abc import Sequence
+from pathlib import Path
 
 import wat.data.queries_async as module
 
@@ -74,10 +75,15 @@ def main():
         inputs = gather_inputs(getattr(module, fn), ["executor"])
         imports = imports | gather_imports(inputs)
         output += generate_class(fn, inputs)
-    with open("models.py", "w") as f:
+    with Path("models.py").open("w") as f:
         # f.write(generate_imports(imports))
         f.write("\n\n\n")
         f.write(output)
+
+
+class File404(Exception):
+    def __init__(self, error: str):
+        super().__init__(error)
 
 
 def execute(file: str):
@@ -86,11 +92,11 @@ def execute(file: str):
     import sys
 
     file_path = file
-    module_name = file.strip("queries/")
+    module_name = file.removeprefix("queries/")
 
     spec = importlib.util.spec_from_file_location(module_name, file_path)
     if spec is None:
-        raise Exception(f"Couldn't find {file}")
+        raise File404(error=f"Couldn't find {file}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
     spec.loader.exec_module(module)
@@ -112,8 +118,8 @@ if __name__ == "__main__":
 
 def test_gather_functions():
     gather_functions(module)
-    assert False
+    raise AssertionError()
 
 
 def test_to_camel():
-    assert "AddATransaction" == _to_camel("add_a_transaction")
+    assert _to_camel("add_a_transaction") == "AddATransaction"
