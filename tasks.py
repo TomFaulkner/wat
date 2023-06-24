@@ -77,12 +77,16 @@ def dev(c):
 
 @task
 def redis(c):
-    c.run("docker compose up", pty=True)
+    c.run("docker compose up -d", pty=True)
 
 
 @task
 def worker(c):
-    c.run("cd src/wat && poetry run arq arq_main.WorkerSettings --watch .", pty=True)
+    redis(c)
+    c.run(
+        "cd src/wat && poetry run arq arq_main.WorkerSettings --watch .",
+        pty=True,
+    )
 
 
 namespace = Collection(format, edge, test, edge_single, dummy, dev, worker)
