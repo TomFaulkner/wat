@@ -14,6 +14,8 @@ httpx = "^0.23.3"
 jinja2 = "^3.1.2"
 arq = "^0.25.0"
 redis = "^4.5.5"
+pyjwt = "^2.7.0"
+cryptography = "^41.0.1"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
@@ -37,6 +39,7 @@ build-backend = "poetry.core.masonry.api"
 # when making changes to this you must rerun poetry install
 "attribs" = "wat.views.attribs"
 "callback" = "wat.views.callback"
+"interactive" = "wat.views.interact"
 "manual_exec" = "wat.views.manual_exec"
 "version" = "wat.views.version"
 "workflows" = "wat.views.workflows"

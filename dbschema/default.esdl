@@ -47,6 +47,7 @@ module default {
         required property depends -> int16;
         # which nodes does this node depend on
         multi link depends_on -> NodeInstance;
+        multi link lanes -> Lane;
 
         required link workflow -> Workflow;
     }
@@ -92,5 +93,18 @@ module default {
         required property type -> str;
         property default_value -> str;
         property active -> bool { default := true };
+    }
+
+    type Lane {
+        required property system -> str;
+        required property system_identifier -> str;  # likely username
+        multi link usages := .<lanes[is NodeInstance];
+        required link key -> Keys;
+    }
+
+    type Keys {
+        required property name -> str;
+        required property key -> str;
+        required property last_modified -> datetime;
     }
 }
