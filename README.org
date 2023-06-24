@@ -47,16 +47,17 @@
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
 ** ToDo [6/6]
-- Important [4/11]
+- Important [6/12]
   - [X] Arq to actually run the workflows
   - [ ] Worker status viewer
     - Is this actually important?
   - [X] interactive node
+  - [X] interactive node calls shouldn't run on blocked
   - [ ] validate interactive node config input on creation (lots of that necessary for workflows in general)
   - [ ] Ingestion friendly name table/path (see notes above)
     - Notes above mention a start node ingest, but /car already takes a json body for start state.
       - Takes query param for wf_id and body with "start" key
-  - [ ] lanes and a way to id users (trusts?)
+  - [X] lanes and a way to id users (trusts?)
   - [X] Polling
     - [X] API to check for desired response to continue (maybe including fetching the results)
   - [X] Callbacks

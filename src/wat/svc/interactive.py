@@ -70,19 +70,27 @@ def _ni_from_wf(wf, ni_id: str) -> dict[str, Any] | None:
 
 
 class NodeInstanceNotFound(ValueError):
-    """Not Instance wasn't found"""
+    """Node Instance wasn't found"""
 
 
 class InteractiveNodeMissingConfig(ValueError):
     """Interactive Node instance doesn't have a prompt."""
 
 
+class NodeInstanceNotReady(ValueError):
+    """Node Instance not in pending state"""
+
+
 async def _get_wf_and_ni(ni_id: str, tx=None) -> tuple[dict, dict]:
     wf_id_obj = await node.get_node_instance_parent_workflow(ni_id, tx)
+    if wf_id_obj is None:
+        raise NodeInstanceNotFound
     wf = await workflows.get_by_id(str(wf_id_obj.workflow.id))
     ni = _ni_from_wf(wf, ni_id)
     if not ni:
         raise NodeInstanceNotFound
+    if not ni["state"] == "pending":
+        raise NodeInstanceNotReady
     return wf, ni
 
 
@@ -99,7 +107,6 @@ def _parse_prompt(node_config_model: NodeModelConfig):
 async def fetch_ni_prompts(ni_id: str, token: str | Token = "", tx=None):
     _, ni = await _get_wf_and_ni(ni_id, tx)
     if ni["config"] != "{}":
-        print(ni["config"])
         return _parse_prompt(json.loads(ni["config"])["prompt"]).schema()
     raise InteractiveNodeMissingConfig
 

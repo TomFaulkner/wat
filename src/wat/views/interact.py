@@ -18,6 +18,20 @@ def raise_lane_errors():
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
         ) from e
+    except interactive.NodeInstanceNotFound as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Node Instance not found."
+        ) from e
+    except interactive.NodeInstanceNotReady as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Node Instance not in pending state.",
+        ) from e
+    except interactive.InteractiveNodeMissingConfig as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Node Instance config is unprocessable.",
+        ) from e
 
 
 @router.post("/i/{ni_id}")
