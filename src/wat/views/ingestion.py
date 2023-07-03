@@ -32,9 +32,9 @@ async def create(
 async def instance(name: str, start=True, tx=Depends(depends.edge_tx)):
     with context.raise_data_errors():
         ir_lookup = (await qget.ingestion_get(tx, friendly_name=name))[0]
-        print(ir_lookup)
         wf = await workflow.create_instance(str(ir_lookup.workflow.id), tx)
-        await workflow.enqueue_wf(str(wf["id"]))
+        if start:
+            await workflow.enqueue_wf(str(wf["id"]))
 
 
 def init_app(app):
