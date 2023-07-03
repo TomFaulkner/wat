@@ -10,4 +10,6 @@ select IngestionRegistry {
   },
   active
 }
-filter .friendly_name = <str>$friendly_name;
+filter
+  .friendly_name = <str>$friendly_name
+  and .active = true;

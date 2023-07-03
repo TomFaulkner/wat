@@ -62,7 +62,9 @@ async def ingestion_get(
           },
           active
         }
-        filter .friendly_name = <str>$friendly_name;\
+        filter
+          .friendly_name = <str>$friendly_name
+          and .active = true;\
         """,
         friendly_name=friendly_name,
     )
