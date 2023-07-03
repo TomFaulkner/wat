@@ -4,9 +4,13 @@ from typing import Any
 from uuid import UUID
 
 import pydantic
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
+
+from wat.queries.state_attributes_get_list_async_edgeql import (
+    state_attributes_get_list as attribs_list,
+)
 
 from ..data import queries_async as q
 from ..lib import context, depends
@@ -44,11 +48,41 @@ class Workflow(WorkflowCreate):
     start_requirements: list[StateAttributes]
 
 
-@router.post("/workflows", response_model=Workflow)
-async def post(workflow_: WorkflowCreate, tx=Depends(depends.edge_tx)) -> Workflow:
-    start_state = "template" if workflow_.template else "waiting"
-    wf = workflow_.dict() | {"state": start_state}
-    return Workflow(**(await workflow.create(wf, tx)))
+class InvalidStartRequirements(ValueError):
+    """Start Requirements included invalid uuids."""
+
+    def __init__(self, not_found: set):
+        self.missing = [str(nf) for nf in not_found]
+        super().__init__(f"Start requirements weren't found: {self.missing}")
+
+
+async def create(wf: dict, tx) -> workflow.q.WorkflowAddResult:
+    start_state = "template" if wf["template"] else "waiting"
+    wf["state"] = start_state
+    res = await workflow.q.workflow_add(tx, **wf)
+    if wf["start_requirements"]:
+        # and not res.start_requirements:
+        attribs = await attribs_list(tx, start_requirements=wf["start_requirements"])
+        if len(attribs) != len(wf["start_requirements"]):
+            diff = set(wf["start_requirements"]).difference(set(attribs))
+            raise InvalidStartRequirements(not_found=diff)
+    return res
+
+
+@router.post("/workflows", response_model=workflow.q.WorkflowAddResult)
+async def post(
+    workflow_: workflow.q.WorkflowAdd, tx=Depends(depends.edge_tx)
+) -> workflow.q.WorkflowAddResult:
+    try:
+        return await create(workflow_.dict(), tx)
+    except InvalidStartRequirements as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "One or more Start Requirement Attributes "
+                f"were not found. {e.missing}",
+            ),
+        ) from e
 
 
 @router.get("/workflows/{wf_id}", response_model=Workflow)

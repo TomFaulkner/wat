@@ -4,14 +4,18 @@ from typing import Any
 
 import pydantic
 
+import wat.queries.workflow_add_async_edgeql as q
+
 from .. import process
 from ..data import node, workflows
 
 logger = logging.getLogger(__name__)
 
 
-async def create(workflow: dict, tx) -> dict[str, Any]:
-    return await workflows.add(workflow, client=tx)
+async def create(workflow: dict, tx) -> q.WorkflowAddResult:
+    start_state = "template" if workflow["template"] else "waiting"
+    workflow["state"] = start_state
+    return await q.workflow_add(tx, **workflow)
 
 
 def _strip_ni(node_instance):
@@ -119,7 +123,7 @@ async def execute_workflow(wf_id: str, suppress_updates=False, tx=None) -> bool:
 async def start_workflow_arq(ctx, wf_id):
     async for tx in ctx["edge_client"].transaction():
         async with tx:
-            start_attrs = {"greeting_name": "greeting_name"}
+            start_attrs = {"greeting_name": "greeting_name"}  # TODO: remove this
             wf = await workflows.get_by_id(wf_id, client=tx)
             await workflows.update_flow_state(wf["flowstate"]["id"], start_attrs, tx)
             return await execute_workflow(str(wf_id), tx=tx)

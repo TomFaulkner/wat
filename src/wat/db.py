@@ -1,3 +1,4 @@
+import logging
 import uuid
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
@@ -10,23 +11,36 @@ from pydantic import json
 
 client: AsyncIOClient | None = None
 
+logger = logging.getLogger(__name__)
+
 
 async def create_pool() -> None:
     global client
-    client = create_async_client(
-        # host=settings.EDGEDB_HOST,
-        # database=settings.EDGEDB_DB,
-        # user=settings.EDGEDB_USER,
-    )
+    client = create_async_client()
+    if not client:
+        logger.critical("Can't connect to Database!")
+    return client
 
 
 async def get_client() -> AsyncGenerator[AsyncIOClient, None]:
+    global client
+    if not client:
+        client = await create_pool()
     yield client
+
+
+class NoClientError(AttributeError):
+    """Client is None. This shouldn't happen."""
 
 
 @asynccontextmanager
 async def client_context() -> AsyncGenerator[AsyncIOClient, None]:
     try:
+        global client
+        if not client:
+            client = await create_pool()
+            if client is None:
+                raise NoClientError  # noqa: TRY301  raise inside try/except
         yield client
     finally:
         pass
