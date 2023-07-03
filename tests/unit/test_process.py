@@ -6,8 +6,8 @@ from wat import process
 @pytest.fixture
 def mock_workflow():
     return {
-        "template": True,
-        "template_active": True,
+        "template": False,
+        "template_active": False,
         "id": "550ef5da-36a6-11ed-a892-bb8818cce9dc",
         "state": "waiting",
         "flowstate": {
@@ -100,8 +100,8 @@ def mock_workflow():
 @pytest.fixture
 def mock_workflow_w_api():
     return {
-        "template": True,
-        "template_active": True,
+        "template": False,
+        "template_active": False,
         "id": "550ef5da-36a6-11ed-a892-bb8818cce9dc",
         "state": "waiting",
         "flowstate": {
@@ -153,8 +153,8 @@ def mock_workflow_w_api():
 @pytest.fixture
 def mock_workflow_w_decision():
     return {
-        "template": True,
-        "template_active": True,
+        "template": False,
+        "template_active": False,
         "id": "550ef5da-36a6-11ed-a892-bb8818cce9dc",
         "state": "waiting",
         "flowstate": {
@@ -262,8 +262,8 @@ def mock_workflow_w_decision():
 @pytest.fixture
 def mock_workflow_w_polling():
     return {
-        "template": True,
-        "template_active": True,
+        "template": False,
+        "template_active": False,
         "id": "550ef5da-36a6-11ed-a892-bb8818cce9dc",
         "state": "waiting",
         "flowstate": {
@@ -319,7 +319,6 @@ def mock_workflow_w_polling():
 
 async def test_execute_wf(mock_workflow):
     await process.execute_wf(mock_workflow)
-
     assert mock_workflow["state"] == "completed"
 
 

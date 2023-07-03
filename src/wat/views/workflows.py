@@ -99,9 +99,9 @@ async def get_all(template_only=False, active_template_only=False) -> list[Workf
 
 
 @router.post("/workflows/create_instance", response_model=Workflow)
-async def instance(wf_id: UUID, tx=Depends(depends.edge_tx)) -> Workflow:
+async def instance(wf_id: UUID, tx=Depends(depends.edge_tx)) -> dict[str, Any]:
     with context.raise_data_errors():
-        return await workflow.create_instance(wf_id, tx)
+        return await workflow.create_instance(str(wf_id), tx)
 
 
 class StartAttributes(BaseModel):

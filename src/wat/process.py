@@ -1,6 +1,6 @@
 import json
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from importlib import import_module
 from pprint import pformat
 from typing import Any
@@ -57,12 +57,11 @@ async def _execute_decision_node(
     return await module.execute(node_instance["node"]["config"], state)
 
 
-def _check_required_state(ni, wf_state):
-    if ni["required_state"]:
-        for key in ni["required_state"]:
-            if not wf_state.get(key):
-                logger.info("Can not run %s due to missing state %s", ni["id"], key)
-                return False
+def _has_required_state(ni, wf_state):
+    for key in ni["required_state"]:
+        if not wf_state.get(key):
+            logger.info("Can not run %s due to missing state %s", ni["id"], key)
+            return False
     return True
 
 
@@ -80,10 +79,45 @@ def _cancel_children(elect: int, children: list[dict]):
     return children
 
 
+async def wrap_execute(exec_func: Callable, instance, wf):
+    module_name = f"{instance['node']['name']}_v{instance['node']['version']}"
+    # TODO: move this try/except to a decorator or another function
+    state_update = None
+    status = None
+
+    try:
+        status, state_update = await exec_func(
+            instance, wf["flowstate"]["state"].copy(), module_name
+        )
+        logger.debug(
+            "{exec_func.__name__} results: %s | %s",
+            status,
+            state_update,
+        )
+    except Exception:
+        instance["state"] = "error"
+        logger.exception(
+            "Workflow (%s:%s) failed to run %s",
+            wf["id"],
+            instance["id"],
+            module_name,
+        )
+
+    if state_update:
+        wf["flowstate"]["state"].update(state_update)
+    if status:
+        instance["state"] = status
+    if status == "completed":
+        return True
+    return False
+
+
 async def _execute_wf(wf) -> bool:  # one or more nodes completed
     node_completed = False
     for instance in wf["node_instances"]:
-        if instance["state"] not in ("pending", "polling") or _check_required_state(
+        if instance["state"] not in ("pending", "polling"):
+            continue
+        if instance["required_state"] and not _has_required_state(
             instance, wf["flowstate"]["state"]
         ):
             continue
@@ -182,9 +216,12 @@ def blocked_node_can_run(node, parents, parent_ids, wf_state) -> bool:
         )
         return False
 
-    logger.debug("Node Instance %s can run.", node["id"])
+    if node["required_state"] and not _has_required_state(node, wf_state):
+        logger.debug("Node Instance %s can not run due to required state.", node["id"])
+        return False
 
-    return _check_required_state(node, wf_state)
+    logger.debug("Node Instance %s can run.", node["id"])
+    return True
 
 
 def _get_parent_nodes(parent_ids, node_instances):

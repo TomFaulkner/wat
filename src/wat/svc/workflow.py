@@ -77,9 +77,9 @@ async def create_instance(wf_id: str, tx) -> dict[str, Any]:
         wf["start_requirements"] = []
     new_wf = await create(wf, tx)
 
-    add_instance = partial(node.add_instance, workflow=new_wf["id"])
+    add_instance = partial(node.add_instance, workflow=str(new_wf.id))
     await _create_node_instances(node_instances, add_instance, _adapter_upd_ni_rels, tx)
-    return await workflows.get_by_id(new_wf["id"], client=tx)
+    return await workflows.get_by_id(str(new_wf.id), client=tx)
 
 
 class NoStartState(Exception):
