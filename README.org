@@ -47,14 +47,14 @@
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
 ** ToDo [6/6]
-- Important [6/12]
+- Important [7/12]
   - [X] Arq to actually run the workflows
   - [ ] Worker status viewer
     - Is this actually important?
   - [X] interactive node
   - [X] interactive node calls shouldn't run on blocked
   - [ ] validate interactive node config input on creation (lots of that necessary for workflows in general)
-  - [ ] Ingestion friendly name table/path (see notes above)
+  - [X] Ingestion friendly name table/path (see notes above)
     - Notes above mention a start node ingest, but /car already takes a json body for start state.
       - Takes query param for wf_id and body with "start" key
   - [X] lanes and a way to id users (trusts?)
@@ -75,7 +75,7 @@
   - [ ] use generated queries
   - [ ] Fix node instances need sequence number, workflows need name/version
   - [ ] Workflows mark themselves complete
-- Nice to Have [0/7]
+- Nice to Have [0/9]
   - [ ] Math Decision Node processing (nodes.decision NotImplementedError)
   - [ ] Validation on Attributes
   - [ ] api node needs to validate whatever it wants to store into flowstate. is this the same as validation on attributes now?
@@ -83,6 +83,8 @@
   - [ ] CLI?
   - [ ] Workflow instance creation fills in a =template_id= to know what template it came from
   - [ ] Dynamic models should include friendly names and maybe descriptions for interactive node uses
+  - [ ] Graphlib to replace my code for graph?
+  - [ ] Run all pending nodes simultaneously?
 - Dev Only [0/4]
   - [ ] system to do inserts for db start state (required attributes and such)
   - [ ] system to populate db for tests
