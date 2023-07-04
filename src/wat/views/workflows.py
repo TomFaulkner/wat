@@ -88,7 +88,28 @@ async def post(
 @router.get("/workflows/{wf_id}", response_model=Workflow)
 async def get(wf_id: UUID) -> Workflow:
     with context.raise_data_errors():
-        return Workflow(**(await workflow.get_by_id(wf_id)))
+        return Workflow(**(await workflow.get_by_id(str(wf_id))))
+
+
+@router.get("/workflows/{wf_id}/graph", response_model=dict)
+async def get_graph(wf_id: UUID):
+    from graphlib import TopologicalSorter
+
+    with context.raise_data_errors():
+        wf = Workflow(**(await workflow.get_by_id(str(wf_id))))
+        graph = {
+            str(ni["id"]): {str(c["id"]) for c in ni["parents"]}
+            for ni in wf.node_instances
+        }
+        ts = TopologicalSorter(graph)
+        g = tuple(ts.static_order())
+        instances = {str(ni["id"]): ni for ni in wf.node_instances}
+        graph_with_details = {
+            ni: {"state": instances[ni]["state"], "name": instances[ni]["node"]["name"]}
+            for ni in g
+        }
+
+        return graph_with_details
 
 
 @router.get("/workflows", response_model=list[Workflow])

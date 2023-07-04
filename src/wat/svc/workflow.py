@@ -1,5 +1,5 @@
 import logging
-from functools import partial
+from functools import partial, singledispatch
 from typing import Any
 
 import pydantic
@@ -123,9 +123,7 @@ async def execute_workflow(wf_id: str, suppress_updates=False, tx=None) -> bool:
 async def start_workflow_arq(ctx, wf_id):
     async for tx in ctx["edge_client"].transaction():
         async with tx:
-            start_attrs = {"greeting_name": "greeting_name"}  # TODO: remove this
-            wf = await workflows.get_by_id(wf_id, client=tx)
-            await workflows.update_flow_state(wf["flowstate"]["id"], start_attrs, tx)
+            await workflows.get_by_id(wf_id, client=tx)
             return await execute_workflow(str(wf_id), tx=tx)
 
 
@@ -147,7 +145,10 @@ async def create_and_run(tx, wf_id: str, start: dict[str, Any] | None = None):
     return await workflows.get_by_id(wf["id"], client=tx)
 
 
-async def get_by_id(wf_id: str) -> dict[str, Any]:
+async def get_by_id(wf_id: str, tx=None) -> dict[str, Any]:
+    if tx:
+        return await workflows.get_by_id(wf_id, client=tx)
+
     return await workflows.get_by_id(wf_id)
 
 
@@ -169,17 +170,34 @@ async def replace_flow_state(wf_id: str, new_state: dict, tx) -> dict:
     return res
 
 
-async def update_flow_state(wf_id: str, new_state: dict, tx) -> dict:
-    wf = await workflows.get_by_id(wf_id)
+async def _update_flow_state_from_wf(wf: dict, new_state: dict, tx) -> dict:
     state = wf["flowstate"]["state"] | new_state
     res = await workflows.update_flow_state(wf["flowstate"]["id"], state, tx)
     logger.debug(
-        "WF: %s | Prev State: %s | New State: %s",
-        wf_id,
+        "WF: %s | FS ID: %s | Prev State: %s | New State: %s",
+        wf["id"],
+        wf["flowstate"]["id"],
         wf["flowstate"]["state"],
         res["state"],
     )
     return res
+
+
+@singledispatch
+async def update_flow_state(wf_id: str, new_state: dict, tx) -> dict:
+    wf = await workflows.get_by_id(wf_id, client=tx)
+    return await _update_flow_state_from_wf(wf, new_state, tx)
+
+
+@update_flow_state.register
+async def _(wf: dict, new_state: dict, tx) -> dict:
+    return await _update_flow_state_from_wf(wf, new_state, tx)
+
+
+async def update_flow_state_from_flowstate_id(
+    flowstate_id: str, new_state: dict, tx
+) -> dict:
+    await workflows.update_flow_state(flowstate_id, new_state, tx)
 
 
 async def callback(ni_id: str, body: dict, tx):
@@ -204,3 +222,12 @@ async def enqueue_wf(wf_id: str) -> None:
 
     redis = await create_pool()
     await redis.enqueue_job("start_workflow_arq", wf_id)
+
+
+def validate_workflow(wf, start_attributes: dict[str, Any]) -> dict:
+    start = {}
+    if wf["start_requirements"]:
+        start = _validate_start_requirements(
+            wf["start_requirements"], start_attributes
+        ).dict()
+    return start
