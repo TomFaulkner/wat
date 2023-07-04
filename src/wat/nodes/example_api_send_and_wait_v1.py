@@ -7,7 +7,7 @@ from wat.config import settings
 
 logger = logging.getLogger(__name__)
 
-url = f"{settings.site_hostname}/callback"
+url = f"{settings.dummy_hostname}/callback"
 
 
 class APISendingException(ValueError):
@@ -33,8 +33,12 @@ async def execute(id_: str, config: dict[str, str], state: dict[str, Any]):
             }
         case _ if 400 <= r.status_code <= 499:
             logger.error(
-                "API call failed with code: %s and message: %s", r.status_code, r.text
+                "API call failed with code: %s and message: %s url: %s",
+                r.status_code,
+                r.text,
+                url,
             )
+            raise APISendingException()
         case _:
             raise APISendingException()
 

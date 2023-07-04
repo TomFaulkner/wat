@@ -3,9 +3,11 @@ from typing import Any
 
 import httpx
 
+from wat.config import settings
+
 logger = logging.getLogger(__name__)
 
-url = "http://127.0.0.1:8001/pollable"
+url = f"{settings.dummy_hostname}/pollable"
 
 
 async def execute(id_: str, config: dict[str, str], state: dict[str, Any]):
