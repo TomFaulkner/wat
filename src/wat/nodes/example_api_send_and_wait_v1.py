@@ -8,6 +8,7 @@ from wat.config import settings
 logger = logging.getLogger(__name__)
 
 url = f"{settings.dummy_hostname}/callback"
+self = f"{settings.site_hostname}"
 
 
 class APISendingException(ValueError):
@@ -19,7 +20,7 @@ async def execute(id_: str, config: dict[str, str], state: dict[str, Any]):
         r = await client.post(
             f"{url}",
             json={
-                "url": f"{url}/cb/{id_}",
+                "url": f"{self}/cb/{id_}",
                 "body": {"snack": "ice cream"},
             },
         )
