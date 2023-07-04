@@ -9,6 +9,7 @@ import pydantic
 import wat.queries.lane_get_async_edgeql as lane
 from wat.data import node, workflows
 from wat.lib.pyd import ModelConfig, create_model_from_dict
+from wat.svc.workflow import enqueue_wf, update_flow_state
 
 logger = logging.getLogger(__name__)
 
@@ -137,5 +138,6 @@ async def get_next_interactive_node(
 async def post(ni_id: str, body: dict, token: str | Token = "", tx=None):
     wf, ni = await _get_wf_and_ni(ni_id, tx)
     obj = _parse_prompt(json.loads(ni["config"])["prompt"])(**body)
-    await workflows.update_flow_state(str(wf["flowstate"]["id"]), obj.dict(), tx)
+    await update_flow_state(str(wf["id"]), obj.dict(), tx)
     await node.update_instance_state(ni_id, "completed", client=tx)
+    await enqueue_wf(wf["id"])

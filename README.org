@@ -47,8 +47,9 @@
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
 ** ToDo [6/6]
-- Important [7/12]
+- Important [8/13]
   - [X] Arq to actually run the workflows
+  - [X] Re-enqueue on callback and interactive response
   - [ ] Worker status viewer
     - Is this actually important?
   - [X] interactive node
@@ -74,7 +75,7 @@
   - [ ] cleanup tx/client issues
   - [ ] use generated queries
   - [ ] Fix node instances need sequence number, workflows need name/version
-  - [ ] Workflows mark themselves complete
+  - [ ] Workflows mark themselves complete (I think this works if I had one with a finish)
 - Nice to Have [0/9]
   - [ ] Math Decision Node processing (nodes.decision NotImplementedError)
   - [ ] Validation on Attributes

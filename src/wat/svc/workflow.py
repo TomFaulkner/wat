@@ -200,6 +200,13 @@ async def update_flow_state_from_flowstate_id(
     await workflows.update_flow_state(flowstate_id, new_state, tx)
 
 
+async def enqueue_wf(wf_id: str) -> None:
+    from arq import create_pool
+
+    redis = await create_pool()
+    await redis.enqueue_job("start_workflow_arq", wf_id)
+
+
 async def callback(ni_id: str, body: dict, tx):
     ni = await node.get_node_instance_parent_workflow(ni_id, tx)
     logger.debug("Callback body: %s", body)
@@ -214,14 +221,7 @@ async def callback(ni_id: str, body: dict, tx):
     for ni in wf["node_instances"]:
         await node.update_instance_state(ni["id"], ni["state"], client=tx)
 
-    # TODO: this should probably re-enqueue the workflow if things remain to be done
-
-
-async def enqueue_wf(wf_id: str) -> None:
-    from arq import create_pool
-
-    redis = await create_pool()
-    await redis.enqueue_job("start_workflow_arq", wf_id)
+    await enqueue_wf(wf["id"])
 
 
 def validate_workflow(wf, start_attributes: dict[str, Any]) -> dict:
