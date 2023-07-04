@@ -47,7 +47,7 @@
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
 ** ToDo [6/6]
-- Important [8/13]
+- Important [8/14]
   - [X] Arq to actually run the workflows
   - [X] Re-enqueue on callback and interactive response
   - [ ] Worker status viewer
@@ -71,6 +71,7 @@
   - [ ] workflow starting other workflows [0/2]
     - [ ] check workflow and node status endpoints / svc functions
     - [ ] workflows should return configured state to parent workflow / API caller
+  - [ ] Interactive node should only work on pending nodes (don't know for sure this isn't the case now)
 - Fixes [0/4]
   - [ ] cleanup tx/client issues
   - [ ] use generated queries
