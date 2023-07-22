@@ -89,4 +89,9 @@ def worker(c):
     )
 
 
-namespace = Collection(format, edge, test, edge_single, dummy, dev, worker)
+@task
+def fe(c):
+    c.run("cd fe; npm run dev --host", pty=True)
+
+
+namespace = Collection(format, edge, test, edge_single, dummy, dev, worker, fe)

@@ -56,6 +56,8 @@ async def _check_lane_token(token: str | Token, tx):
 
 
 def check_lane_token(f):
+    """Checks token matches lane key, doesn't check if allowed in the node."""
+
     @wraps(f)
     async def wrapper(*args, **kwargs):
         t = await _check_lane_token(kwargs.pop("token"), kwargs["tx"])

@@ -46,8 +46,8 @@
   - >1: N parents
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
-** ToDo [6/6]
-- Important [8/14]
+** ToDo [6/7]
+- Important [9/16]
   - [X] Arq to actually run the workflows
   - [X] Re-enqueue on callback and interactive response
   - [ ] Worker status viewer
@@ -71,7 +71,9 @@
   - [ ] workflow starting other workflows [0/2]
     - [ ] check workflow and node status endpoints / svc functions
     - [ ] workflows should return configured state to parent workflow / API caller
-  - [ ] Interactive node should only work on pending nodes (don't know for sure this isn't the case now)
+  - [X] Interactive node should only work on pending nodes
+  - [ ] Interactive node should only allow users on lane to use it.
+  - [ ] Get workflows (or ni) based on lane token
 - Fixes [0/4]
   - [ ] cleanup tx/client issues
   - [ ] use generated queries
@@ -98,3 +100,7 @@
 - [X] start node needs to take validated inputs to enter into flowstate (workflow does this instead)
 - [X] fastapi endpoint for starting workflow should take a dict of state for start
 - [X] Decision Node
+
+** GUI Notes
+- Location Coordinates in Workflow {id: {x: int, y: int}}
+- NI Name
