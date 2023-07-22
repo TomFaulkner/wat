@@ -1,6 +1,6 @@
 from invoke import task
 
-edge = "EDGEDB_INSTANCE=ca_test"
+edge = "EDGEDB_INSTANCE=wat_test"
 
 pr = "poetry run"
 
@@ -23,16 +23,17 @@ def unit(c, lf=False, debug=False):
 def test_db(c):
     c.run(
         """
-        edgedb instance destroy --force --non-interactive -I ca_test || true
-        edgedb instance create --non-interactive ca_test
-        edgedb migrate -I ca_test
-        """
+        edgedb instance destroy --force --non-interactive -I wat_test || true
+        edgedb instance create --non-interactive wat_test
+        edgedb migrate -I wat_test
+        """,
+        pty=True,
     )
 
 
 @task(test_db)
 def func(c, lf=False, debug=False):
-    c.run(f"{edge} {pr} pytest {pytest_params(lf, debug)} tests/functional")
+    c.run(f"{edge} {pr} pytest {pytest_params(lf, debug)} tests/functional", pty=True)
 
 
 @task(test_db)
