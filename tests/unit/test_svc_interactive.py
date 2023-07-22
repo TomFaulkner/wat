@@ -48,8 +48,9 @@ async def test_fetch_ni_prompts(mock_workflow, monkeypatch):
     get = AsyncMock(interactive._get_wf_and_ni)
     get.return_value = mock_workflow, mock_workflow["node_instances"][0]
     monkeypatch.setattr(interactive, "_get_wf_and_ni", get)
+    monkeypatch.setattr(interactive, "_check_lane_token", lambda _, __: "")
 
-    res = await interactive.fetch_ni_prompts(ni_id, None)
+    res = await interactive.fetch_ni_prompts(ni_id, token="", tx=None)
     assert res == {
         "title": "Video Game",
         "type": "object",
@@ -74,7 +75,7 @@ async def test_post(mock_workflow, monkeypatch):
 
     body = {"bits": 16, "popular": False, "name": "ROTK II"}
 
-    await interactive.post(ni_id, body, None)
+    await interactive.post(ni_id, body, token="")
 
     upd_fs.assert_awaited_with(mock_workflow["flowstate"]["id"], body, None)
     upd_inst_state.assert_awaited_with(
