@@ -8,8 +8,8 @@
   let visible = true;
 
   const positions = {};
-  data?.workflows[0]?.node_instances?.forEach((ni, i) => {
-    positions[ni.id] = { x: 250, y: i * 150 };
+  data?.workflow?.node_instances?.forEach((ni, i) => {
+    positions[ni.id] = { x: 250, y: i * 250 };
   });
 
   const handleSave = () => {
@@ -22,6 +22,7 @@
     <input type="checkbox" bind:checked={visible} />
     visible
   </label>
+
   {#if visible}
     <div transition:fade>
       <Drawer
@@ -35,8 +36,8 @@
         modifier="alt"
         snapTo={1}
       >
-        {#each data.workflows[0].node_instances as ni, index (ni.id)}
-          <MyNode {ni} {index} bind:position={positions[ni.id]} />
+        {#each data.workflow.node_instances as ni, index (ni.id)}
+          <MyNode {ni} bind:position={positions[ni.id]} />
         {/each}
         <ThemeToggle main="dark" alt="light" slot="toggle" />
       </Drawer>
