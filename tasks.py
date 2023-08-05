@@ -12,7 +12,6 @@ def format(c):
         poetry run isort -l 88 --up --tc --float-to-top src tests dummy
         poetry run ruff --fix src tests dummy
         poetry run black src tests dummy
-        poetry run flake8 src tests dummy
         """,
         pty=True,
     )
@@ -56,11 +55,20 @@ def edge_single(c):
     c.run(
         """
     poetry install
+
+    echo "\nssort\n"
+    poetry run ssort src tests dummy
+
     echo "\nisort\n"
     isort --float-to-top queries
+
     echo "\nblack\n"
     black queries/*.py
+
     cp queries/*.py src/wat/queries
+
+    echo "\nruff\n"
+    poetry run ruff --fix src/wat/queries
     """  # E501: line too long
     )
 
