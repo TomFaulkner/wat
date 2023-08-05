@@ -2,6 +2,7 @@ with new_workflow := (
   insert Workflow {
     name := <str>$name,
     version := <int16>$version,
+    locations := <std::json>$locations,
     template := <bool>$template,
     template_active := <bool>$template_active,
     state := <str>$state,
@@ -23,6 +24,7 @@ select new_workflow {
   name,
   version,
   template,
+  locations,
   template_active,
   state,
   flowstate :{ state, created, last_updated },
