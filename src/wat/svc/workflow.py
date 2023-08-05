@@ -1,10 +1,14 @@
+import json
 import logging
 from functools import partial, singledispatch
 from typing import Any
+from uuid import UUID
 
 import pydantic
 
 import wat.queries.workflow_add_async_edgeql as q
+from wat.queries import workflow_get_all_by_state_async_edgeql as qwf_by_state
+from wat.queries import workflow_locations_update_async_edgeql as loc_update
 
 from .. import process
 from ..data import node, workflows
@@ -58,6 +62,8 @@ async def _create_node_instances(node_instances, create_node, update_node_childr
         # probably best to make an adapter function
         await update_node_children(ni, tx)
 
+    return ids
+
 
 async def _adapter_upd_ni_rels(ni, tx):
     return await node.update_node_instance_relationships(
@@ -65,8 +71,38 @@ async def _adapter_upd_ni_rels(ni, tx):
     )
 
 
-async def create_instance(wf_id: str, tx) -> dict[str, Any]:
+def _map_locations(ids, locations):
+    new_locations = {}
+    for old, new in ids.items():
+        new_locations[new] = locations[old]
+    return new_locations
+
+
+class Location(pydantic.BaseModel):
+    x: int
+    y: int
+
+
+class Locations(pydantic.BaseModel):
+    __root__: dict[UUID, Location]
+
+
+async def update_locations(wf_id: UUID, update: Locations | dict, tx):
+    def _fix_keys(d: dict) -> dict:
+        print({str(k): v for k, v in d["__root__"].items()})
+        return {str(k): v for k, v in d["__root__"].items()}
+
+    if isinstance(update, Locations):
+        update = _fix_keys(update.dict())
+    await loc_update.workflow_locations_update(
+        tx, id=wf_id, locations=json.dumps(update)
+    )
+    return True
+
+
+async def create_instance(wf_id: str, tx) -> UUID:
     wf = await workflows.get_active_template_by_id(wf_id, client=tx)
+    locations = wf["locations"]
     logger.debug("Fetched WF template: %s", wf)
     wf = _strip_wf(wf.copy())
     node_instances = wf.pop("node_instances")
@@ -78,8 +114,12 @@ async def create_instance(wf_id: str, tx) -> dict[str, Any]:
     new_wf = await create(wf, tx)
 
     add_instance = partial(node.add_instance, workflow=str(new_wf.id))
-    await _create_node_instances(node_instances, add_instance, _adapter_upd_ni_rels, tx)
-    return await workflows.get_by_id(str(new_wf.id), client=tx)
+    ids = await _create_node_instances(
+        node_instances, add_instance, _adapter_upd_ni_rels, tx
+    )
+    new_locs = _map_locations(ids, json.loads(locations))
+    await update_locations(new_wf.id, new_locs, tx)
+    return new_wf.id
 
 
 class NoStartState(Exception):
@@ -129,8 +169,9 @@ async def start_workflow_arq(ctx, wf_id):
 
 async def create_and_run(tx, wf_id: str, start: dict[str, Any] | None = None):
     """Start an new workflow instance.
+    Runs in the app rather than the worker.
 
-    This should be the main way workflows are started."""
+    This should no longer be the main way workflows are started."""
 
     wf = await create_instance(wf_id, tx=tx)
     logger.debug("Created WF: %s", wf)
@@ -156,6 +197,10 @@ async def get(template_only=False, active_template_only=False) -> list[dict[str,
     return await workflows.get(
         template_only=template_only, active_template_only=active_template_only
     )
+
+
+async def get_by_state(state: str, tx) -> list:
+    return await qwf_by_state.workflow_get_all_by_state(tx, state=state)
 
 
 async def replace_flow_state(wf_id: str, new_state: dict, tx) -> dict:

@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from typing import Any
@@ -8,6 +9,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 
+from wat.queries import workflow_get_templates_async_edgeql as q_templates
 from wat.queries.state_attributes_get_list_async_edgeql import (
     state_attributes_get_list as attribs_list,
 )
@@ -35,16 +37,17 @@ class WorkflowCreate(BaseModel):
 class StateAttributes(BaseModel):
     name: str
     type: str
-    default_value: str | None
+    default_value: str | None = None
 
 
 class Workflow(WorkflowCreate):
     id: UUID
-    name: str | None
-    version: int | None
+    name: str | None = None
+    version: int | None = None
+    locations: dict[str, dict[str, int]] | None
     state: str
     flowstate: FlowState
-    node_instances: Any
+    node_instances: Any = None
     start_requirements: list[StateAttributes]
 
 
@@ -88,7 +91,12 @@ async def post(
 @router.get("/workflows/{wf_id}", response_model=Workflow)
 async def get(wf_id: UUID) -> Workflow:
     with context.raise_data_errors():
-        return Workflow(**(await workflow.get_by_id(str(wf_id))))
+        res = await workflow.get_by_id(str(wf_id))
+        if res["locations"]:
+            res["locations"] = json.loads(res["locations"])
+        else:
+            res["locations"] = {}
+        return Workflow(**(res))
 
 
 @router.get("/workflows/{wf_id}/graph", response_model=dict)
@@ -119,14 +127,30 @@ async def get_all(template_only=False, active_template_only=False) -> list[Workf
         return [Workflow(**(wf)) for wf in workflows]
 
 
-@router.post("/workflows/create_instance", response_model=Workflow)
-async def instance(wf_id: UUID, tx=Depends(depends.edge_tx)) -> dict[str, Any]:
+@router.get(
+    "/workflows_by_state",
+    response_model=workflow.qwf_by_state.WorkflowGetAllByStateResult,
+)
+async def get_all_by_state(state: str = "template", tx=Depends(depends.edge_tx)):
+    return await workflow.get_by_state(state, tx)
+
+
+@router.get(
+    "/workflow_templates", response_model=q_templates.WorkflowGetTemplatesResult
+)
+async def templates(tx=Depends(depends.edge_tx)):
+    with context.raise_data_errors():
+        return await q_templates.workflow_get_templates(tx)
+
+
+@router.post("/workflows/create_instance", response_model=UUID)
+async def instance(wf_id: UUID, tx=Depends(depends.edge_tx)) -> UUID:
     with context.raise_data_errors():
         return await workflow.create_instance(str(wf_id), tx)
 
 
 class StartAttributes(BaseModel):
-    start: dict | None
+    start: dict | None = None
 
 
 @router.post("/workflows/create_and_run", response_model=Workflow)
@@ -175,9 +199,16 @@ async def add_start_requirements(
         await q.workflow_start_requirements_add(tx, id=wf_id, state_ids=attribute_ids)
 
 
-@router.post("/workflows/{wf_id}/enqueu")
+@router.post("/workflows/{wf_id}/enqueue")
 async def enqueue_wf(wf_id: UUID):
     await workflow.enqueue_wf(str(wf_id))
+
+
+@router.put("/workflows/{wf_id}/locations", response_model=bool)
+async def update_locations(
+    wf_id: UUID, update: workflow.Locations, tx=Depends(depends.edge_tx)
+) -> bool:
+    return await workflow.update_locations(wf_id, update, tx)
 
 
 def init_app(app):
