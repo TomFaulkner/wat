@@ -12,6 +12,7 @@ _workflow_attributes_query = """
     id,
     name,
     version,
+    locations,
     template,
     template_active,
     state,

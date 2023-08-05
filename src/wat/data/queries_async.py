@@ -19,7 +19,7 @@ class StateAttributesAddResult(pydantic.BaseModel):
     id: uuid.UUID
     name: str
     type: str
-    default_value: str | None
+    default_value: str | None = None
 
 
 class WorkflowStartRequirementsAddResult(pydantic.BaseModel):
