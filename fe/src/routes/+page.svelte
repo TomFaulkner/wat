@@ -8,12 +8,12 @@
   const submit = ingestion.queue;
 </script>
 
-<h1>WF</h1>
+<h1>Templates</h1>
 
-{#if data.workflows !== undefined}
+{#if data.templates !== undefined}
   <table>
     <tr><td>Name</td><td>Version</td><td>ID</td></tr>
-    {#each data.workflows as wf (wf.id)}
+    {#each data.templates as wf (wf.id)}
       <tr>
         <td><a href="/wf/{wf.id}">{wf.name}</a></td>
         <td>{wf.version}</td>
@@ -22,8 +22,9 @@
     {/each}
   </table>
 
+  <h1>Interactivity</h1>
   {#if data.interactive !== undefined}
-    <p>{data.interactive.friendly_name}</p>
+    <p><a href="/wf/{data.interactive.workflow.id}">{data.interactive.friendly_name}</a></p>
     <StartAttribute
       startRequirements={data.interactive.workflow.start_requirements}
       bind:formData={startRequirementsForm}
