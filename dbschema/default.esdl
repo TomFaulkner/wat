@@ -57,6 +57,8 @@ module default {
         property name -> str;
         property version -> int16;
 
+        property locations -> json;
+
         property template -> bool;
         property template_active -> bool;
         required property state -> str {
