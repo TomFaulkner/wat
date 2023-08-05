@@ -79,6 +79,7 @@ class WorkflowAddResult(NoPydanticValidation):
     name: str | None
     version: int | None
     template: bool | None
+    locations: str | None
     template_active: bool | None
     state: str
     flowstate: WorkflowAddResultFlowstate | None
@@ -91,6 +92,7 @@ async def workflow_add(
     *,
     name: str,
     version: int,
+    locations: str,
     template: bool,
     template_active: bool,
     state: str,
@@ -102,6 +104,7 @@ async def workflow_add(
           insert Workflow {
             name := <str>$name,
             version := <int16>$version,
+            locations := <std::json>$locations,
             template := <bool>$template,
             template_active := <bool>$template_active,
             state := <str>$state,
@@ -123,6 +126,7 @@ async def workflow_add(
           name,
           version,
           template,
+          locations,
           template_active,
           state,
           flowstate :{ state, created, last_updated },
@@ -148,6 +152,7 @@ async def workflow_add(
         """,
         name=name,
         version=version,
+        locations=locations,
         template=template,
         template_active=template_active,
         state=state,
@@ -158,6 +163,7 @@ async def workflow_add(
 class WorkflowAdd(pydantic.BaseModel):
     name: str
     version: int
+    locations: str
     template: bool
     template_active: bool
     state: str
