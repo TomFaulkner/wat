@@ -90,36 +90,6 @@ async def get_node_instance_parent_workflow(ni_id: str, tx):
 
 
 @inject_client
-async def add_node(
-    node: dict[str, Any],
-    client: AsyncIOClient,
-):
-    res = await client.query(
-        """
-        with new_node := (
-            insert Node {
-                name := $name,
-                version := <int16>$version,
-                template := <bool>$template,
-
-                base := $base,
-                type := $type,
-            }
-        )
-        select new_instance { %s }
-        """
-        % _node_instance_attributes_query,
-        node=node["name"],
-        version=node["version"],
-        template=node["template"],
-        base=node["base"],
-        type=node["type"],
-    )
-    result = edge.obj_to_dict(res[0])
-    return result
-
-
-@inject_client
 async def update_instance_state(
     instance_id: str,
     state: str,
