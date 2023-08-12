@@ -26,6 +26,9 @@ module default {
     }
 
     type NodeInstance {
+        property template -> bool;
+        property template_active -> bool;
+
         required link node -> Node;
         required property state -> str {
             constraint one_of (
