@@ -27,7 +27,7 @@ async def execute(id_: str, config: dict[str, str], state: dict[str, Any]):
     j = r.json()
     match r.status_code:
         case 200:
-            return "completed", {"httpbin_post_response_url": r.json()["url"]}
+            return "completed", {"post_response_url": r.json()["url"]}
         case 202:
             return "waiting", {
                 id_: {"callback_count": 0, "obj_id": j["id"], "updates": []}
