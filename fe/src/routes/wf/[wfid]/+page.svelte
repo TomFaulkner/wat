@@ -3,11 +3,12 @@
   import { Node, Svelvet, Minimap, Controls, Drawer, ThemeToggle } from 'svelvet';
   import { locations, workflows, ingestion } from '$lib/api.js';
   import MyNode from '$lib/svelvet/MyNode.svelte';
+  import StateTable from '$lib/components/StateTable.svelte';
   import StartAttribute from '$lib/components/StartAttribute.svelte';
 
   export let data;
 
-  let visible = true;
+  let visible = false;
 
   let positions = {};
   let instance = null;
@@ -44,15 +45,14 @@
     }
   };
 
+  const state = JSON.parse(data.workflow.flowstate.state);
 </script>
 
 <div>
-  <label>
-    <input type="checkbox" bind:checked={visible} />
-    Show workflow
-  </label>
-
-  <p>{data.workflow.friendly_name || ''}</p>
+  <p>Workflow State: {data.workflow.state}</p>
+  <h3>Flow State</h3>
+  <StateTable {state} />
+  <p>{data.workflow.ingestion[0]?.friendly_name || ''}</p>
   <StartAttribute
     startRequirements={data.workflow.start_requirements}
     bind:formData={startRequirementsForm}
@@ -62,9 +62,17 @@
     on:click={submitIRQ}
     disabled={!submitEnabled}
       >Submit</button>
+  <br />
   {#if error != ''}
     <i>{error}</i>
   {/if}
+
+  <div>
+    <label>
+      <input type="checkbox" bind:checked={visible} />
+      Show workflow
+    </label>
+  </div>
 
   {#if visible}
     <div transition:fade>

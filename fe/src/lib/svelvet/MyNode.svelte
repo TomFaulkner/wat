@@ -25,7 +25,7 @@
     console.log(e);
   }
 
-  function buttonClick() {
+  function saveConfig() {
     if (editing) {
       console.log('save');
       editing = false;
@@ -35,6 +35,8 @@
       editing = true;
     }
   }
+
+  function cancelConfig() { editing = false; };
 
   const colors = {
     ingestion: 'green',
@@ -73,7 +75,7 @@
       </div>
       <table>
         <tr>
-          <td> Node Name </td>
+          <td> Node Type (Name) </td>
           <td> {ni.node.name} </td>
         </tr>
         <tr>
@@ -100,9 +102,12 @@
             {/if}
           </td>
         </tr>
-        <button on:click={buttonClick} class={`nodeButton ${ni.node.type}`}>
+        <button on:click={saveConfig} class={`nodeButton ${ni.node.type}`}>
           {editing ? 'Save' : 'Edit'}
         </button>
+        {#if editing}
+          <button on:click={cancelConfig} class={`nodeButton ${ni.node.type}`}>Cancel</button>
+        {/if}
       </table>
       <div class="anchors output-anchors">
         <Anchor output direction="south" />
