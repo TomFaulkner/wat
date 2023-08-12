@@ -5,52 +5,13 @@ See make_decision.
 """
 import logging
 from copy import deepcopy
-from enum import Enum
 from typing import Any
 
 import jinja2
-from pydantic import BaseModel
+
+from wat.schemas.node_instance_config import Config as C
 
 logger = logging.getLogger(__name__)
-
-
-class Operand(str, Enum):
-    eq = "eq"
-    ne = "dne"
-    gt = "gt"
-    gte = "gte"
-    lt = "lt"
-    lte = "lte"
-
-
-class OperandTypes(str, Enum):
-    bool = "bool"
-    int = "int"
-    str = "str"
-
-
-class Rules(BaseModel):
-    op: Operand
-    operand_1: str
-    operand_2: str
-    operand_types: OperandTypes
-
-
-class Strategy(str, Enum):
-    all = "all"
-    any = "any"
-
-    # do i want these? then does op need to include math?
-    # or maybe a decision math node
-    # maybe even a decision switch/case node
-    sum = "sum"
-    diff = "diff"
-
-
-class DecisionConfig(BaseModel):
-    choices: dict[bool | int | str, int]
-    rules: list[Rules]
-    strategy: Strategy | int
 
 
 Config = dict[str, Any]
@@ -134,6 +95,7 @@ def _decide(
 
 def make_decision(config: Config, state: dict[str, Any]) -> int:
     # TODO: maybe take both configs and merge them here, node | node_instance
+    C(**config)
     config = deepcopy(config)
     config["decision"]["rules"] = [
         _pull_from_state(state, rule) for rule in config["decision"]["rules"]
