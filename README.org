@@ -8,15 +8,15 @@
    4. Flowstate created
 2. NodeInstances copied (by finding all nodeinstances in the template workflow: workflow.node_instances)
    1. workflow assignment changed to new workflow
-3. Start on Start node is sent to celery
+3. Start on Start node is sent to arq
 ** Workflow Processing
-1. Called via celery process
+1. Called via arq process
 2. Filter all waiting workflows
    1. Get all nodeinstances tied to workflow
    2. ForEach: Filter all waiting nodes
       1. Check depends/depends_on to determine if node can run
-      2. Run node if appropriate(send node id to celery)
-      3. IF action node send to celery
+      2. Run node if appropriate(send node id to arq)
+      3. IF action node send to arq
       4. IF decision process it
       5. Continue to next node
 ** Ingestion
@@ -46,15 +46,17 @@
   - >1: N parents
 - NI.depends_on: list[dict[id, UUID]] of specific parents that must be awaited
 
-** ToDo [6/7]
+** ToDo [6/6]
 - Important [9/16]
   - [X] Arq to actually run the workflows
   - [X] Re-enqueue on callback and interactive response
-  - [ ] Worker status viewer
+  - [ ] Worker status viewer [0/1]
     - Is this actually important?
+    - [ ] Track running workflows / nodes
   - [X] interactive node
   - [X] interactive node calls shouldn't run on blocked
-  - [ ] validate interactive node config input on creation (lots of that necessary for workflows in general)
+  - [ ] validate interactive node config input on creation/update (lots of that necessary for workflows in general)
+    - [ ] Pydantic schema exists for all known config fields now
   - [X] Ingestion friendly name table/path (see notes above)
     - Notes above mention a start node ingest, but /car already takes a json body for start state.
       - Takes query param for wf_id and body with "start" key
@@ -65,12 +67,15 @@
     - How does a node wait for a callback? Set state to =waiting=
     - Poll state to continue a workflow? or Does the callback handler set this and execute wf again? (this seems to make more sense)
       - [ ] Parse the cb data using a model stored in NI config
-  - [ ] GUI to configure/build
-    - [ ] Shows required states for all node instances and allows selecting which to add to wf start attribs
+  - [-] GUI to configure/build
+    - [-] Shows required states for all node instances and allows selecting which to add to wf start attribs
+      - [X] Shows required states
+      - [ ] Allows selecting which to add to wf start attributes
   - [ ] GUI Dashboard
-  - [ ] workflow starting other workflows [0/2]
+  - [ ] workflow starting other workflows [0/3]
     - [ ] check workflow and node status endpoints / svc functions
     - [ ] workflows should return configured state to parent workflow / API caller
+    - [ ] Options to wait for it or to be happy with queuing
   - [X] Interactive node should only work on pending nodes
   - [ ] Interactive node should only allow users on lane to use it.
   - [ ] Get workflows (or ni) based on lane token
@@ -80,7 +85,7 @@
   - [ ] Fix node instances need sequence number, workflows need name/version
   - [ ] Workflows mark themselves complete (I think this works if I had one with a finish)
 - Nice to Have [0/9]
-  - [ ] Math Decision Node processing (nodes.decision NotImplementedError)
+  - [ ] Math Decision Node processing (nodes.decision NotImplementedError)  # min/max
   - [ ] Validation on Attributes
   - [ ] api node needs to validate whatever it wants to store into flowstate. is this the same as validation on attributes now?
   - [ ] dynamic validation system for api node to flowstate
@@ -94,6 +99,9 @@
   - [ ] system to populate db for tests
   - [ ] functional tests
   - [ ] contract testing
+- Consider [0/1]
+  - [ ] Drop Node, moving name, version, base, and type to NodeInstances to simplify things
+    - NIs need a name to go with the new template fields anyway.
 - [X] saving state and changes
 - [X] Try individual query files and/or directories (edgedb-py doesn't innately do different directories)
 - [X] Validation on Start Requirements
@@ -102,5 +110,12 @@
 - [X] Decision Node
 
 ** GUI Notes
-- Location Coordinates in Workflow {id: {x: int, y: int}}
-- NI Name
+- [X] Location Coordinates in Workflow {id: {x: int, y: int}}
+- [X] NI Name
+- [ ] Sidebar has nodes/node instances to choose from, drag/drop them into place
+- [ ] Configure node instances (nodes?)
+- [ ] Connecting nodes saves parent/child relationships
+- [ ] Viewing a workflow shows node instance states, and they are immediatly apparent (change color?)
+- [X] Show flowstate in wf view
+- [ ] Arq status viewer
+- [ ] Saving NI configs
