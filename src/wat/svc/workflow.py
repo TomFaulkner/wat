@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 async def create(workflow: dict, tx) -> q.WorkflowAddResult:
     start_state = "template" if workflow["template"] else "waiting"
     workflow["state"] = start_state
+    workflow.pop("ingestion")
     return await q.workflow_add(tx, **workflow)
 
 
@@ -269,7 +270,7 @@ async def callback(ni_id: str, body: dict, tx):
     await enqueue_wf(wf["id"])
 
 
-def validate_workflow(wf, start_attributes: dict[str, Any]) -> dict:
+def validate_workflow(wf: dict[str, Any], start_attributes: dict[str, Any]) -> dict:
     start = {}
     if wf["start_requirements"]:
         start = _validate_start_requirements(

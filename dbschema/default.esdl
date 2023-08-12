@@ -57,6 +57,7 @@ module default {
         property name -> str;
         property version -> int16;
 
+        # FE display coordinates {ni.id: {x: 250, y: 250}, ...}
         property locations -> json;
 
         property template -> bool;
@@ -70,6 +71,7 @@ module default {
         link flowstate -> FlowState;
         multi link start_requirements -> StateAttributes;
         multi link node_instances := .<workflow[is NodeInstance];
+        link ingestion := .<workflow[is IngestionRegistry];
     }
 
     type FlowState {

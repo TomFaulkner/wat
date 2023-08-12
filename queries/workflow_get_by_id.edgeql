@@ -4,6 +4,7 @@ select Workflow {
     version,
     template,
     template_active,
+    locations,
     ingestion :{ friendly_name, active },
 
     state,
@@ -28,4 +29,4 @@ select Workflow {
       },
       workflow,
     },
-} filter .template = true and .template_active = true;
+} filter .id = <uuid>$id;

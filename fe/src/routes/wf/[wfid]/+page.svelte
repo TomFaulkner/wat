@@ -32,8 +32,14 @@
     status = 'Enqueued';
   };
 
+  const submitIRQ = async () => {
+    console.log(data.workflow);
+    await ingestion.queue(data.workflow.ingestion[0].friendly_name, startRequirementsForm);
+  };
+
   const submit = ingestion.queue;
   // TODO: this isn't requesting the ingest friendly name so it won't work.
+  // TODO: maybe have the page switch on uuid vs str to pull IR name?
 
   console.log(data.workflow);
 </script>
@@ -51,7 +57,7 @@
   />
   <button
     id="submitStartRequirements"
-    on:click={() => submit(data.workflow.friendly_name, startRequirementsForm)}
+    on:click={submitIRQ}
       >Submit</button>
 
   {#if visible}

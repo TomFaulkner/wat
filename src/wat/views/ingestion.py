@@ -42,8 +42,10 @@ async def instance(
     tx=Depends(depends.edge_tx),
 ):
     with context.raise_data_errors():
+        # TODO: handle 404, shows as next line having no items
         ir_lookup = (await qget.ingestion_get(tx, friendly_name=name))[0]
-        wf = await workflow.create_instance(str(ir_lookup.workflow.id), tx)
+        wf_id = await workflow.create_instance(str(ir_lookup.workflow.id), tx)
+        wf = await workflow.get_by_id(str(wf_id), tx=tx)
         try:
             start_attributes = workflow.validate_workflow(wf, start.start)
         except workflow.NoStartState as e:
@@ -52,10 +54,10 @@ async def instance(
             ) from e
         except pydantic.ValidationError as e:
             raise HTTPException(422, str(e)) from e
-        await workflow.update_flow_state(wf, start_attributes, tx)
+        await workflow.update_flow_state(wf_id, start_attributes, tx)
         if queue:
-            background_tasks.add_task(workflow.enqueue_wf, str(wf["id"]))
-        return await workflow.get_by_id(wf["id"], tx=tx)
+            background_tasks.add_task(workflow.enqueue_wf, str(wf_id))
+        return wf
 
 
 def init_app(app):

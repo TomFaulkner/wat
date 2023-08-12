@@ -4,9 +4,13 @@ select Workflow {
     version,
     template,
     template_active,
+    ingestion :{ friendly_name, active },
+    locations,
+
     state,
     flowstate :{ state, created, last_updated },
     start_requirements :{ name, type, default_value },
+
     node_instances :{
       state,
       parents,

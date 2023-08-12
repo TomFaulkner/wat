@@ -31,6 +31,13 @@ class WorkflowGetAllByStateResultFlowstate(NoPydanticValidation):
 
 
 @dataclasses.dataclass
+class WorkflowGetAllByStateResultIngestionItem(NoPydanticValidation):
+    id: uuid.UUID
+    friendly_name: str
+    active: bool
+
+
+@dataclasses.dataclass
 class WorkflowGetAllByStateResultNodeInstancesItemNode(NoPydanticValidation):
     id: uuid.UUID
     name: str
@@ -80,6 +87,8 @@ class WorkflowGetAllByStateResult(NoPydanticValidation):
     version: int | None
     template: bool | None
     template_active: bool | None
+    ingestion: list[WorkflowGetAllByStateResultIngestionItem]
+    locations: str | None
     state: str
     flowstate: WorkflowGetAllByStateResultFlowstate | None
     start_requirements: list[WorkflowGetAllByStateResultStartRequirementsItem]
@@ -99,9 +108,13 @@ async def workflow_get_all_by_state(
             version,
             template,
             template_active,
+            ingestion :{ friendly_name, active },
+            locations,
+
             state,
             flowstate :{ state, created, last_updated },
             start_requirements :{ name, type, default_value },
+
             node_instances :{
               state,
               parents,

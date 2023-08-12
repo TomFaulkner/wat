@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from pydantic import BaseModel
 
+from wat.lib.edge import obj_to_dict
+from wat.queries import workflow_get_by_id_async_edgeql as qwf_by_id
 from wat.queries import workflow_get_templates_async_edgeql as q_templates
 from wat.queries.state_attributes_get_list_async_edgeql import (
     state_attributes_get_list as attribs_list,
@@ -40,11 +42,17 @@ class StateAttributes(BaseModel):
     default_value: str | None = None
 
 
+class Ingestion(BaseModel):
+    friendly_name: str
+    active: bool
+
+
 class Workflow(WorkflowCreate):
     id: UUID
     name: str | None = None
     version: int | None = None
     locations: dict[str, dict[str, int]] | None
+    ingestion: Ingestion
     state: str
     flowstate: FlowState
     node_instances: Any = None
@@ -88,15 +96,21 @@ async def post(
         ) from e
 
 
-@router.get("/workflows/{wf_id}", response_model=Workflow)
-async def get(wf_id: UUID) -> Workflow:
+@router.get("/workflows/{wf_id}", response_model=qwf_by_id.WorkflowGetByIdResult)
+async def get(wf_id: UUID, tx=Depends(depends.edge_tx)):
     with context.raise_data_errors():
-        res = await workflow.get_by_id(str(wf_id))
-        if res["locations"]:
-            res["locations"] = json.loads(res["locations"])
+        res = await qwf_by_id.workflow_get_by_id(tx, id=wf_id)
+        if not res:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=("Workflow not found."),
+            )
+        result = obj_to_dict(res)
+        if res.locations:
+            result["locations"] = json.loads(res.locations)
         else:
-            res["locations"] = {}
-        return Workflow(**(res))
+            result["locations"] = {}
+        return result
 
 
 @router.get("/workflows/{wf_id}/graph", response_model=dict)

@@ -15,6 +15,7 @@ _workflow_attributes_query = """
     locations,
     template,
     template_active,
+    ingestion :{ friendly_name, active },
     state,
     flowstate :{ state, created, last_updated },
     start_requirements :{ name, type, default_value },
