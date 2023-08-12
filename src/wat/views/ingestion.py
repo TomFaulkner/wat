@@ -1,6 +1,7 @@
 import pydantic
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
+from starlette.status import HTTP_404_NOT_FOUND
 
 from wat.queries import ingestion_create_async_edgeql as qcreate
 from wat.queries import ingestion_get_async_edgeql as qget
@@ -43,7 +44,12 @@ async def instance(
 ):
     with context.raise_data_errors():
         # TODO: handle 404, shows as next line having no items
-        ir_lookup = (await qget.ingestion_get(tx, friendly_name=name))[0]
+        try:
+            ir_lookup = (await qget.ingestion_get(tx, friendly_name=name))[0]
+        except IndexError as e:
+            raise HTTPException(
+                HTTP_404_NOT_FOUND, "Workflow friendly name not found."
+            ) from e
         wf_id = await workflow.create_instance(str(ir_lookup.workflow.id), tx)
         wf = await workflow.get_by_id(str(wf_id), tx=tx)
         try:

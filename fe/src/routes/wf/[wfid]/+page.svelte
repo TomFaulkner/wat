@@ -32,16 +32,18 @@
     status = 'Enqueued';
   };
 
+  let error = '';
+  let submitEnabled = true;
+
   const submitIRQ = async () => {
-    console.log(data.workflow);
-    await ingestion.queue(data.workflow.ingestion[0].friendly_name, startRequirementsForm);
+    try {
+      await ingestion.queue(data.workflow.ingestion[0].friendly_name, startRequirementsForm);
+      submitEnabled = false;
+    } catch (e) {
+      error = e;
+    }
   };
 
-  const submit = ingestion.queue;
-  // TODO: this isn't requesting the ingest friendly name so it won't work.
-  // TODO: maybe have the page switch on uuid vs str to pull IR name?
-
-  console.log(data.workflow);
 </script>
 
 <div>
@@ -58,7 +60,11 @@
   <button
     id="submitStartRequirements"
     on:click={submitIRQ}
+    disabled={!submitEnabled}
       >Submit</button>
+  {#if error != ''}
+    <i>{error}</i>
+  {/if}
 
   {#if visible}
     <div transition:fade>
@@ -100,5 +106,10 @@
     padding: 0.5rem 2rem;
     color: white;
     font-size: 1.5rem;
+
+  }
+  button:disabled
+  {
+    background: #999999;
   }
 </style>
