@@ -11,6 +11,13 @@ class Prompt(BaseModel):
     model: Model
 
 
+class SendBody(BaseModel):
+    body_format: Literal["json", "xml", "jinja"]
+    template: str | None
+    state_vars: list[str] | None
+    key_translation: dict[str, str] | None
+
+
 class ApiCall(BaseModel):
     url: str
     method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"]
@@ -20,6 +27,10 @@ class ApiCall(BaseModel):
     body_validation: Model | None
 
     response_state_prefix: str | None
+    response_body_type: Literal["json", "xml"] | None
+
+    send_body: SendBody | None
+    send_body_type: Literal["data", "json"]
 
 
 class Operand(str, Enum):
