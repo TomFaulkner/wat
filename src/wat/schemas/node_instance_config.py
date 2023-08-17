@@ -18,6 +18,12 @@ class SendBody(BaseModel):
     key_translation: dict[str, str] | None
 
 
+class ResponseBody(BaseModel):
+    body_format: Literal["json", "xml", "jinja"]
+    # API response name: (new_name, required)
+    key_translation: dict[str, tuple[str, bool]] | None
+
+
 class ApiCall(BaseModel):
     url: str
     method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"]
@@ -26,11 +32,10 @@ class ApiCall(BaseModel):
     response_validation: Model | None
     body_validation: Model | None
 
-    response_state_prefix: str | None
-    response_body_type: Literal["json", "xml"] | None
-
     send_body: SendBody | None
     send_body_type: Literal["data", "json"]
+
+    response_body: ResponseBody
 
 
 class Operand(str, Enum):
