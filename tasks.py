@@ -12,6 +12,8 @@ def format(c):
         poetry run isort -l 88 --up --tc --float-to-top src tests dummy
         poetry run ruff --fix src tests dummy
         poetry run black src tests dummy
+
+        cd fe; npx prettier --write --plugin prettier-plugin-svelte .
         """,
         pty=True,
     )
