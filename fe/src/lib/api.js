@@ -12,11 +12,11 @@ const queue = async (name, start) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ start })
   });
-	if (!response.ok) {
+  if (!response.ok) {
     const body = await response.json();
     console.error(`${response.status} ${body.detail}`);
-		throw new CustomException(body.detail, response.status);
-	}
+    throw new CustomException(body.detail, response.status);
+  }
   return response.json();
 };
 

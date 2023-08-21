@@ -5,6 +5,7 @@
   export let position = {};
 
   let configContent = '';
+  let configContentObj = {};
 
   function handleClick(e) {
     const { detail } = e;
@@ -25,7 +26,7 @@
     console.log(e);
   }
 
-  function saveConfig() {
+  function saveConfig(id) {
     if (editing) {
       console.log('save');
       editing = false;
@@ -33,10 +34,13 @@
     } else {
       configContent = ni.config;
       editing = true;
+      editingNodeInstance = id;
     }
   }
 
-  function cancelConfig() { editing = false; };
+  function cancelConfig() {
+    editing = false;
+  }
 
   const colors = {
     ingestion: 'green',
@@ -48,6 +52,7 @@
   };
 
   let editing = false;
+  let editingNodeInstance = '';
   let connections = ni.children.map((c) => c.id);
   $: console.log(connections);
 </script>
@@ -102,7 +107,7 @@
             {/if}
           </td>
         </tr>
-        <button on:click={saveConfig} class={`nodeButton ${ni.node.type}`}>
+        <button on:click={() => saveConfig(ni.id)} class={`nodeButton ${ni.node.type}`}>
           {editing ? 'Save' : 'Edit'}
         </button>
         {#if editing}

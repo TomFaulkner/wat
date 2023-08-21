@@ -19,7 +19,8 @@
 {/if}
 
 <style>
-  tr, td {
-      border: 1px solid black;
+  tr,
+  td {
+    border: 1px solid black;
   }
 </style>

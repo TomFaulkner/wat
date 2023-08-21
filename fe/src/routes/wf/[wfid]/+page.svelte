@@ -5,6 +5,7 @@
   import MyNode from '$lib/svelvet/MyNode.svelte';
   import StateTable from '$lib/components/StateTable.svelte';
   import StartAttribute from '$lib/components/StartAttribute.svelte';
+  import ConfigEditor from '$lib/svelvet/ConfigEditor.svelte';
 
   export let data;
 
@@ -46,6 +47,12 @@
   };
 
   const state = JSON.parse(data.workflow.flowstate.state);
+
+  let configContentObj = {};
+  let editingNodeInstance;
+  const saveConfig = async () => {
+    console.log(editingNodeInstance, configContentObj);
+  };
 </script>
 
 <div>
@@ -57,14 +64,15 @@
     startRequirements={data.workflow.start_requirements}
     bind:formData={startRequirementsForm}
   />
-  <button
-    id="submitStartRequirements"
-    on:click={submitIRQ}
-    disabled={!submitEnabled}
-      >Submit</button>
+  <button id="submitStartRequirements" on:click={submitIRQ} disabled={!submitEnabled}>Submit</button
+  >
   <br />
   {#if error != ''}
     <i>{error}</i>
+  {/if}
+
+  {#if editingNodeInstance !== ''}
+    <ConfigEditor bind:config={configContentObj} save={saveConfig} />
   {/if}
 
   <div>
@@ -88,7 +96,7 @@
         snapTo={1}
       >
         {#each data.workflow.node_instances as ni, index (ni.id)}
-          <MyNode {ni} bind:position={positions[ni.id]} />
+          <MyNode {ni} bind:position={positions[ni.id]} bind:editingNodeInstance />
         {/each}
         <ThemeToggle main="dark" alt="light" slot="toggle" />
       </Drawer>
@@ -114,10 +122,8 @@
     padding: 0.5rem 2rem;
     color: white;
     font-size: 1.5rem;
-
   }
-  button:disabled
-  {
+  button:disabled {
     background: #999999;
   }
 </style>
